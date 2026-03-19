@@ -1,32 +1,29 @@
-from agent.planner import plan_animation
+from agent.planner import plan_animation, normalize_plan
 from agent.coder import generate_manim_code
 from agent.debugger import debug_manim_code
 from agent.feedback import get_learned_examples
 from sandbox.sandbox import run_manim_sandbox
-from sandbox.audio_merger import add_voice_to_video
-import os
 
 MAX_ATTEMPTS = 3
 
 
-def run_agent(user_query: str) -> dict:
-    """
-    Full pipeline:
-    1. Planner thinks about what animation to create
-    2. Coder writes Manim code from the plan
-    3. Sandbox compiles with retry loop
-    4. Voice narration added
-    5. Return final video
-    """
+def build_plan(user_query: str) -> dict:
+    """Generate a structured animation plan from the user's prompt."""
+    print("\n[Agent] Step 1: Planning...")
+    return plan_animation(user_query)
 
+
+def run_agent_with_plan(user_query: str, approved_plan: dict) -> dict:
+    """
+    Pipeline execution using a pre-approved plan.
+    """
     print()
     print("=" * 50)
-    print(f"[Agent] Starting for: {user_query}")
+    print(f"[Agent] Starting generation for: {user_query}")
     print("=" * 50)
 
-    # Step 1: Plan the animation
-    print("\n[Agent] Step 1: Planning...")
-    plan = plan_animation(user_query)
+    # Step 1: Normalize/guard the approved plan.
+    plan = normalize_plan(approved_plan or {}, user_query)
 
     # Check if we have learned examples for this category
     category = plan.get("visual_style", "diagram")
@@ -62,28 +59,40 @@ def run_agent(user_query: str) -> dict:
                 "attempts": attempt
             }
 
-    # Step 4: Add voice
-    print(f"\n[Agent] Adding voice narration...")
-    os.makedirs("outputs", exist_ok=True)
-
-    voice_result = add_voice_to_video(
-        code=code,
-        video_path=result["video_path"],
-        output_path="outputs/final_animation.mp4"
-    )
+    # Step 4: Voice is generated during Manim render via VoiceoverScene.
+    has_audio = "self.voiceover(" in code and "VoiceoverScene" in code
 
     print()
     print("=" * 50)
     print(f"[Agent] COMPLETE!")
-    print(f"[Agent] Video: {voice_result['video_path']}")
+    print(f"[Agent] Video: {result['video_path']}")
     print("=" * 50)
 
     return {
         "status": "success",
-        "video_path": voice_result["video_path"],
-        "has_audio": voice_result["has_audio"],
+        "video_path": result["video_path"],
+        "has_audio": has_audio,
         "code": code,
         "plan": plan,
         "attempts": attempt,
         "category": category
     }
+
+
+def run_agent(user_query: str) -> dict:
+    """
+    Full pipeline:
+    1. Planner thinks about what animation to create
+    2. Coder writes Manim code from the plan
+    3. Sandbox compiles with retry loop
+    4. Voice narration rendered directly in Manim
+    5. Return final video
+    """
+
+    print()
+    print("=" * 50)
+    print(f"[Agent] Starting for: {user_query}")
+    print("=" * 50)
+
+    plan = build_plan(user_query)
+    return run_agent_with_plan(user_query, plan)

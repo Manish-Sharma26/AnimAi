@@ -1,5 +1,6 @@
 streamlit>=1.28.0
-groq>=0.4.0
+google-genai>=1.0.0
+manim-voiceover>=0.3.7
 faiss-cpu>=1.7.4
 sentence-transformers>=2.2.2
 gtts>=2.3.0

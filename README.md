@@ -7,7 +7,7 @@ AI-powered educational animation generator that creates professional Manim anima
 - 🤖 **AI-Powered Planning**: Automatic animation structure planning using LLM
 - 🎨 **Professional Design System**: Consistent dark theme with stunning visuals
 - 🔄 **Self-Healing Code**: Automatic debugging and retry logic
-- 🎙️ **Voice Narration**: Built-in text-to-speech for educational voiceovers
+- 🎙️ **Native Manim Voiceover**: Narration rendered directly during Manim scene execution
 - 📚 **RAG-Enhanced**: Retrieves relevant Manim patterns from documentation
 - 📈 **Learning System**: Improves over time from user feedback
 - 🔒 **Safe Execution**: Docker-isolated code compilation
@@ -16,8 +16,8 @@ AI-powered educational animation generator that creates professional Manim anima
 
 - Python 3.9 or higher
 - Docker Desktop installed and running
-- FFmpeg installed (for audio merging)
-- Groq API key ([get one free at Groq](https://console.groq.com))
+- FFmpeg installed
+- Anthropic API key ([get one at Anthropic](https://console.anthropic.com))
 
 ## 🚀 Setup
 
@@ -47,7 +47,7 @@ AI-powered educational animation generator that creates professional Manim anima
    
    Create a `.env` file in the root directory:
    ```env
-   GROQ_API_KEY=your_groq_api_key_here
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
    ```
 
 5. **Build Docker image**
@@ -74,7 +74,7 @@ AI-powered educational animation generator that creates professional Manim anima
 
 1. Enter a description of the animation you want (e.g., "Animate bubble sort with array 5 2 8 1 9")
 2. Click "Generate Animation"
-3. Wait for the AI to plan, code, compile, and add voice narration
+3. Wait for the AI to plan, code, and compile the narrated animation
 4. Watch your animation and download the MP4
 5. Give feedback to help the system learn!
 
@@ -93,7 +93,7 @@ animai-studio/
 │   └── feedback.py             # Learning from user feedback
 ├── sandbox/                    # Isolated execution
 │   ├── sandbox.py              # Docker-based Manim runner
-│   └── audio_merger.py         # TTS and video merging
+│   └── audio_merger.py         # Legacy fallback TTS/merge utilities
 ├── rag/                        # Retrieval-Augmented Generation
 │   ├── download_docs.py        # Doc scraper and indexer
 │   ├── retriever.py            # Vector similarity search
@@ -120,11 +120,11 @@ python test_audio.py
 ## 🛠️ Technology Stack
 
 - **Frontend**: Streamlit
-- **LLM**: Groq (Llama-3.3 70B)
+- **LLM**: Anthropic Claude (claude-3-5-sonnet)
 - **Animation**: Manim Community Edition
 - **Execution**: Docker
 - **RAG**: FAISS + Sentence Transformers
-- **TTS**: Google Text-to-Speech (gTTS)
+- **Voiceover**: manim-voiceover + Google Text-to-Speech (gTTS)
 - **Video Processing**: FFmpeg
 
 ## 🎨 Visual Styles
@@ -150,7 +150,7 @@ MIT License - feel free to use for educational purposes!
 ## ⚠️ Security Note
 
 - Never commit your `.env` file
-- Keep your Groq API key private
+- Keep your Anthropic API key private
 - Regenerate your API key if accidentally exposed
 
 ## 🐛 Troubleshooting
@@ -159,7 +159,7 @@ MIT License - feel free to use for educational purposes!
 
 **FFmpeg not found**: Install FFmpeg and add to system PATH
 
-**Groq API error**: Verify your API key in `.env` file
+**Anthropic API error**: Verify your API key in `.env` file
 
 **No video generated**: Check Docker logs with `docker logs <container_id>`
 

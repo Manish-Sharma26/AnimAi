@@ -1,7 +1,8 @@
 import streamlit as st
 import os
-import time
-from agent.orchestrator import run_agent
+import json
+from agent.orchestrator import build_plan, run_agent_with_plan
+from agent.planner import normalize_plan
 from agent.feedback import save_good_example, get_feedback_stats
 
 st.set_page_config(page_title="AnimAI Studio", page_icon="🎬", layout="centered")
@@ -36,6 +37,13 @@ st.markdown("""
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown('<p class="main-title">🎬 AnimAI Studio</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">AI-powered educational animations for every teacher</p>', unsafe_allow_html=True)
+
+if "draft_plan" not in st.session_state:
+    st.session_state["draft_plan"] = None
+if "approved_plan" not in st.session_state:
+    st.session_state["approved_plan"] = None
+if "plan_prompt" not in st.session_state:
+    st.session_state["plan_prompt"] = ""
 
 # Show feedback stats if any
 stats = get_feedback_stats()
@@ -73,7 +81,72 @@ prompt = st.text_area(
 
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    generate_btn = st.button("🚀 Generate Animation", disabled=not prompt)
+    plan_btn = st.button("🧠 Generate Plan", disabled=not prompt)
+
+# Reset stale plans when prompt changes
+if prompt and st.session_state.get("plan_prompt") and prompt != st.session_state.get("plan_prompt"):
+    st.session_state["draft_plan"] = None
+    st.session_state["approved_plan"] = None
+
+if plan_btn and prompt:
+    with st.spinner("Gemini is building your animation plan..."):
+        draft_plan = build_plan(prompt)
+    st.session_state["draft_plan"] = draft_plan
+    st.session_state["approved_plan"] = None
+    st.session_state["plan_prompt"] = prompt
+
+# ── Plan Approval ────────────────────────────────────────────────────────────
+if st.session_state.get("draft_plan"):
+    st.divider()
+    st.markdown("### 🧠 Review the plan before generation")
+
+    draft_plan = st.session_state["draft_plan"]
+    st.markdown('<div class="plan-box">', unsafe_allow_html=True)
+    st.markdown(f"**Title:** {draft_plan.get('title', '')}")
+    st.markdown(f"**Visual Style:** {draft_plan.get('visual_style', '')}")
+    st.markdown(f"**Estimated Duration:** {draft_plan.get('duration_seconds', 45)} seconds")
+    st.markdown("**Steps:**")
+    for i, step in enumerate(draft_plan.get("steps", []), 1):
+        st.markdown(f"&nbsp;&nbsp;{i}. {step}")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("#### ✏️ Edit the plan (JSON)")
+    st.caption("You can edit steps, voiceovers, and duration_seconds before generation.")
+
+    editable_json = st.text_area(
+        "Editable Plan JSON",
+        value=json.dumps(draft_plan, indent=2),
+        height=320,
+        key="editable_plan_json"
+    )
+
+    c1, c2 = st.columns(2)
+    with c1:
+        approve_btn = st.button("✅ Use This Plan", use_container_width=True)
+    with c2:
+        regen_plan_btn = st.button("🔄 Regenerate Plan", use_container_width=True)
+
+    if regen_plan_btn and prompt:
+        with st.spinner("Regenerating plan from prompt..."):
+            refreshed = build_plan(prompt)
+        st.session_state["draft_plan"] = refreshed
+        st.session_state["approved_plan"] = None
+        st.rerun()
+
+    if approve_btn:
+        try:
+            parsed = json.loads(editable_json)
+            approved = normalize_plan(parsed, prompt)
+            st.session_state["approved_plan"] = approved
+            st.success("Plan approved. You can generate the final narrated animation now.")
+        except Exception as e:
+            st.error(f"Plan JSON is invalid: {e}")
+
+if st.session_state.get("approved_plan"):
+    st.markdown("### 🚀 Generate final video")
+    generate_btn = st.button("🎬 Generate Video With Voice", use_container_width=True)
+else:
+    generate_btn = False
 
 # ── Generation ────────────────────────────────────────────────────────────────
 if generate_btn and prompt:
@@ -95,10 +168,11 @@ if generate_btn and prompt:
     show_step(p_plan,    "⏳", "Planning animation structure...", "#F9CA24")
     show_step(p_code,    "⬜", "Generating Manim code...", "#444")
     show_step(p_compile, "⬜", "Compiling animation...", "#444")
-    show_step(p_audio,   "⬜", "Adding voice narration...", "#444")
+    show_step(p_audio,   "⬜", "Rendering voiceover in Manim...", "#444")
 
     try:
-        result = run_agent(prompt)
+        approved_plan = st.session_state.get("approved_plan")
+        result = run_agent_with_plan(prompt, approved_plan)
 
         # Update steps based on result
         show_step(p_plan,    "✅", "Animation planned!", "#6AB04C")
@@ -106,7 +180,7 @@ if generate_btn and prompt:
         show_step(p_compile, "✅", "Compilation successful!", "#6AB04C")
         show_step(p_audio,
                   "✅" if result.get("has_audio") else "⚠️",
-                  "Voice narration added!" if result.get("has_audio") else "Silent video (no internet for TTS)",
+                  "Voice narration rendered!" if result.get("has_audio") else "Video generated, but no voiceover blocks were detected.",
                   "#6AB04C" if result.get("has_audio") else "#F9CA24")
 
         st.divider()
@@ -147,6 +221,9 @@ if generate_btn and prompt:
                 with col3:
                     if st.button("🆕 New Animation", use_container_width=True):
                         st.session_state["prompt"] = ""
+                        st.session_state["draft_plan"] = None
+                        st.session_state["approved_plan"] = None
+                        st.session_state["plan_prompt"] = ""
                         st.rerun()
 
                 # Feedback section

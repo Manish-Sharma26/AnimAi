@@ -18,6 +18,25 @@ def extract_voiceover_lines(code: str) -> list:
     return lines
 
 
+def _polish_voiceover_lines(voiceover_lines: list) -> list:
+    """Improve pacing and readability of narration before TTS synthesis."""
+    polished = []
+    for raw in voiceover_lines:
+        text = re.sub(r"\s+", " ", str(raw or "")).strip()
+        if not text:
+            continue
+
+        # Ensure each line ends with a pause-friendly punctuation mark.
+        if text[-1] not in ".!?":
+            text = f"{text}."
+
+        # gTTS sounds better when commas mark short explanatory pauses.
+        text = text.replace(" because ", ", because ")
+        polished.append(text)
+
+    return polished
+
+
 def generate_audio(voiceover_lines: list, output_path: str) -> bool:
     """
     Combines all voiceover lines into one audio file using gTTS.
@@ -26,7 +45,12 @@ def generate_audio(voiceover_lines: list, output_path: str) -> bool:
         print("[Audio] No voiceover lines found in code")
         return False
 
-    full_script = ". ".join(voiceover_lines)
+    polished_lines = _polish_voiceover_lines(voiceover_lines)
+    if not polished_lines:
+        print("[Audio] No usable voiceover lines after cleanup")
+        return False
+
+    full_script = " ".join(polished_lines)
     print(f"[Audio] Generating audio for: {full_script[:80]}...")
 
     try:
