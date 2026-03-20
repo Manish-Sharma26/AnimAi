@@ -1,7 +1,6 @@
 from agent.planner import plan_animation, normalize_plan
 from agent.coder import generate_manim_code
 from agent.debugger import debug_manim_code
-from agent.feedback import get_learned_examples
 from sandbox.sandbox import run_manim_sandbox
 
 MAX_ATTEMPTS = 3
@@ -24,14 +23,7 @@ def run_agent_with_plan(user_query: str, approved_plan: dict) -> dict:
 
     # Step 1: Normalize/guard the approved plan.
     plan = normalize_plan(approved_plan or {}, user_query)
-
-    # Check if we have learned examples for this category
     category = plan.get("visual_style", "diagram")
-    learned = get_learned_examples(category, k=1)
-    if learned:
-        print(f"[Agent] Found {len(learned)} learned example(s) for category: {category}")
-        # Inject best learned example into plan for coder context
-        plan["learned_example"] = learned[0]["code"]
 
     # Step 2: Generate code from plan
     print("\n[Agent] Step 2: Generating code...")

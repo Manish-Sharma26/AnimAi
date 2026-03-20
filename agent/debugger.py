@@ -20,6 +20,7 @@ ERROR:
 7. Ensure all parentheses, brackets, and string quotes are balanced.
 8. The fixed code must pass `compile(code, 'scene.py', 'exec')` check.
 9. If the code uses `VoiceoverScene` and `GTTSService`, preserve those imports and `self.set_speech_service(...)` setup.
+10. For Manim positioning APIs, use callable getters like `get_center()`, `get_top()`, `get_bottom()` when passing points to `move_to`, `next_to`, or vector math.
 
 Common fixes:
 - Incomplete lines: `ELEMENT_SP` → `ELEMENT_SPACING = 0.5`
@@ -31,6 +32,18 @@ Return ONLY the complete, syntactically valid Python code. No commentary.
 """
 
 
+def _apply_common_manim_runtime_fixes(code: str, error: str) -> str:
+    """Apply deterministic fixes for frequent Manim runtime mistakes."""
+    fixed = code
+    err = (error or "").lower()
+
+    # Common LLM mistake: `obj.center` used as a point in move_to instead of `obj.get_center()`.
+    if "unsupported operand type(s) for -: 'method' and 'float'" in err:
+        fixed = fixed.replace(".move_to(result_banner.center)", ".move_to(result_banner.get_center())")
+
+    return fixed
+
+
 def debug_manim_code(code: str, error: str) -> str:
     """
     Takes broken code + error message.
@@ -38,6 +51,11 @@ def debug_manim_code(code: str, error: str) -> str:
     Returns corrected code.
     """
     print(f"[Debugger] Analyzing error: {error[:100]}...")
+
+    deterministic_fix = _apply_common_manim_runtime_fixes(code, error)
+    if deterministic_fix != code:
+        print("[Debugger] Applied deterministic Manim runtime fix")
+        return deterministic_fix
 
     prompt = DEBUGGER_PROMPT.format(code=code, error=error)
     response = call_llm(prompt, max_tokens=6000)

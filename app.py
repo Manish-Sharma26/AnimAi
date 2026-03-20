@@ -105,13 +105,22 @@ if st.session_state.get("draft_plan"):
     st.markdown(f"**Title:** {draft_plan.get('title', '')}")
     st.markdown(f"**Visual Style:** {draft_plan.get('visual_style', '')}")
     st.markdown(f"**Estimated Duration:** {draft_plan.get('duration_seconds', 45)} seconds")
+    st.markdown(f"**Opening Scene:** {draft_plan.get('opening_scene', '')}")
     st.markdown("**Steps:**")
     for i, step in enumerate(draft_plan.get("steps", []), 1):
         st.markdown(f"&nbsp;&nbsp;{i}. {step}")
+
+    full_script = draft_plan.get("full_script", [])
+    if full_script:
+        st.markdown("**Full Start-to-End Script:**")
+        for i, beat in enumerate(full_script, 1):
+            st.markdown(f"&nbsp;&nbsp;{i}. {beat}")
+
+    st.markdown(f"**Closing Scene:** {draft_plan.get('closing_scene', '')}")
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("#### ✏️ Edit the plan (JSON)")
-    st.caption("You can edit steps, voiceovers, and duration_seconds before generation.")
+    st.caption("You can edit opening_scene, steps, voiceovers, full_script, and duration_seconds before generation.")
 
     editable_json = st.text_area(
         "Editable Plan JSON",
@@ -195,9 +204,18 @@ if generate_btn and prompt:
                     st.markdown(f"**Title:** {plan.get('title', '')}")
                     st.markdown(f"**Visual Style:** {plan.get('visual_style', '')}")
                     st.markdown(f"**Planned Duration:** {plan.get('duration_seconds', 45)}s")
+                    st.markdown(f"**Opening Scene:** {plan.get('opening_scene', '')}")
                     st.markdown("**Steps:**")
                     for i, step in enumerate(plan.get("steps", []), 1):
                         st.markdown(f"&nbsp;&nbsp;{i}. {step}")
+
+                    full_script = plan.get("full_script", [])
+                    if full_script:
+                        st.markdown("**Full Script:**")
+                        for i, beat in enumerate(full_script, 1):
+                            st.markdown(f"&nbsp;&nbsp;{i}. {beat}")
+
+                    st.markdown(f"**Closing Scene:** {plan.get('closing_scene', '')}")
                     st.markdown(f'</div>', unsafe_allow_html=True)
 
             # Video player
