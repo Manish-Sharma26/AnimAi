@@ -6,11 +6,52 @@ import glob
 
 # Using pre-built Manim image — no custom build needed
 DOCKER_IMAGE = "manim-voiceover"
+MIN_VIDEO_BYTES = 200_000
 
 
 def _tail(text: str, max_chars: int = 20000) -> str:
     text = text or ""
     return text[-max_chars:] if len(text) > max_chars else text
+
+
+def _pick_newest(paths):
+    existing = [p for p in paths if os.path.isfile(p)]
+    if not existing:
+        return None
+    return max(existing, key=os.path.getmtime)
+
+
+def _find_best_video(output_root: str):
+    """Find the best final render video and avoid partial fragments."""
+    generated_scene = glob.glob(
+        os.path.join(output_root, "videos", "**", "GeneratedScene.mp4"),
+        recursive=True,
+    )
+    best = _pick_newest(generated_scene)
+
+    if best and os.path.getsize(best) >= MIN_VIDEO_BYTES:
+        return best, ""
+
+    all_mp4 = glob.glob(os.path.join(output_root, "**", "*.mp4"), recursive=True)
+    final_candidates = [
+        p for p in all_mp4
+        if "partial_movie_files" not in p.replace("\\", "/")
+    ]
+    best = _pick_newest(final_candidates)
+    if best and os.path.getsize(best) >= MIN_VIDEO_BYTES:
+        return best, ""
+
+    partials = glob.glob(
+        os.path.join(output_root, "**", "partial_movie_files", "**", "*.mp4"),
+        recursive=True,
+    )
+    if partials:
+        return None, "Partial segments exist but final merged video is missing"
+
+    if best and os.path.getsize(best) < MIN_VIDEO_BYTES:
+        return None, f"Final video exists but is too small ({os.path.getsize(best)} bytes)"
+
+    return None, "No video file was generated"
 
 def run_manim_sandbox(code: str, timeout: int = 120) -> dict:
     """
@@ -77,13 +118,9 @@ def run_manim_sandbox(code: str, timeout: int = 120) -> dict:
 
         # Step 4: Check if it worked
         if result.returncode == 0:
-            video_files = glob.glob(
-                os.path.join(tmp_dir, "output", "**", "*.mp4"),
-                recursive=True
-            )
+            video_path, video_error = _find_best_video(os.path.join(tmp_dir, "output"))
 
-            if video_files:
-                video_path = video_files[0]
+            if video_path:
                 os.makedirs("outputs", exist_ok=True)
                 final_path = os.path.join("outputs", "animation.mp4")
                 shutil.copy(video_path, final_path)
@@ -96,10 +133,10 @@ def run_manim_sandbox(code: str, timeout: int = 120) -> dict:
                     "stderr": result.stderr
                 }
             else:
-                print("[Sandbox] ❌ Compiled but no video file found")
+                print(f"[Sandbox] ❌ Compiled but video artifact invalid: {video_error}")
                 return {
                     "success": False,
-                    "error": "No video file was generated",
+                    "error": video_error,
                     "stdout": result.stdout,
                     "stderr": result.stderr
                 }

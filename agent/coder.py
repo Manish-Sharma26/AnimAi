@@ -1,10 +1,11 @@
 import re
 import json
 import os
-from agent.llm import call_llm
+from agent.llm import call_llm_detailed
 
 CODER_MODEL = os.getenv("GEMINI_CODER_MODEL", "gemini-2.5-pro")
 MAX_GENERATION_ATTEMPTS = 3
+MAX_CONTINUATION_ATTEMPTS = 2
 
 
 def _build_coder_plan_payload(plan: dict) -> dict:
@@ -64,6 +65,8 @@ ANIMATION QUALITY RULES:
 - Build a clear learning arc: setup -> process -> key transition -> conclusion.
 - Prefer topic-appropriate visual encoding (color, position, grouping, emphasis) over random motion.
 - Use callouts/highlights to direct attention when a key idea changes.
+- Keep all key visuals fully inside frame; avoid clipped or half-visible structures.
+- Avoid text/object overlap by spacing elements and scaling groups when needed.
 
 ANIMATION PLAN (use this as the source of truth):
 {plan_json}
@@ -81,6 +84,37 @@ Add # VOICEOVER: comments and matching `with self.voiceover(...)` blocks at ever
 Return ONLY the Python code. No explanation.
 """
 
+REVISION_PROMPT = """You are an expert Manim code editor.
+You are given existing working Manim code and user-requested changes.
+
+TASK:
+- Apply the requested changes to the existing code.
+- Preserve all working parts unless they conflict with the requested changes.
+- Keep class name `GeneratedScene` and `VoiceoverScene` usage.
+- Keep `self.set_speech_service(GTTSService(lang=\"en\"))`.
+- Keep or improve existing voiceover blocks.
+- Return the FULL updated Python file from imports to end of `construct()`.
+
+QUALITY RULES:
+- Ensure no clipping/overlap where possible.
+- For binary tree topics, ensure the full tree is visible on screen (not half-cut).
+- Keep animations educational and readable.
+
+TOPIC:
+{query}
+
+PLAN JSON:
+{plan_json}
+
+USER REQUESTED CHANGES:
+{change_request}
+
+EXISTING CODE:
+{existing_code}
+
+Return ONLY Python code. No markdown or commentary.
+"""
+
 
 def _likely_truncated_tail(code: str) -> bool:
     stripped = (code or "").rstrip()
@@ -92,7 +126,26 @@ def _likely_truncated_tail(code: str) -> bool:
     return False
 
 
-def _validate_generated_code(code: str, expected_steps: int) -> str:
+def _binary_tree_completeness_error(code: str, query: str) -> str:
+    """Heuristic guard against half-visible or incomplete binary tree renders."""
+    text = (query or "").lower()
+    if "binary tree" not in text:
+        return ""
+
+    # If a Graph-based layout is used, assume structure is likely complete.
+    if "Graph(" in code:
+        return ""
+
+    node_count = len(re.findall(r"Circle\(|Dot\(|RoundedRectangle\(", code))
+    edge_count = len(re.findall(r"Line\(|Arrow\(", code))
+
+    if node_count < 6 or edge_count < 4:
+        return "binary tree appears incomplete; ensure full tree nodes and edges are visible"
+
+    return ""
+
+
+def _validate_generated_code(code: str, expected_steps: int, query: str = "") -> str:
     """Return empty string when code looks complete, else a short validation error."""
     if not code.strip():
         return "empty output"
@@ -115,12 +168,41 @@ def _validate_generated_code(code: str, expected_steps: int) -> str:
     if expected_steps > 3 and len(code.splitlines()) < 45:
         return "output too short for requested step count"
 
+    tree_error = _binary_tree_completeness_error(code, query)
+    if tree_error:
+        return tree_error
+
     try:
         compile(code, "scene.py", "exec")
     except SyntaxError as e:
         return f"syntax error: {e.msg} at line {e.lineno}"
 
     return ""
+
+
+def _stitch_continuation(base_code: str, continuation: str) -> str:
+    """Append continuation safely to existing code."""
+    left = (base_code or "").rstrip()
+    right = (continuation or "").lstrip()
+    if not left:
+        return right
+    if not right:
+        return left
+    return f"{left}\n{right}"
+
+
+def _continuation_prompt(query: str, plan_json: str, partial_code: str) -> str:
+    tail_lines = "\n".join((partial_code or "").splitlines()[-60:])
+    return (
+        "You are continuing an incomplete Python file for a Manim Voiceover scene.\n"
+        "Do NOT restart from imports or class declaration.\n"
+        "Return ONLY the remaining lines that should come after the partial tail.\n"
+        "Do not include markdown fences or explanations.\n\n"
+        f"Topic: {query}\n"
+        f"Plan JSON: {plan_json}\n\n"
+        "Partial file tail (continue from here):\n"
+        f"{tail_lines}\n"
+    )
 
 
 def generate_manim_code(query: str, plan: dict = None) -> str:
@@ -155,17 +237,52 @@ def generate_manim_code(query: str, plan: dict = None) -> str:
                 f"Validation failure to fix: {last_validation_error}\n"
             )
 
-        response = call_llm(
+        response_details = call_llm_detailed(
             prompt_for_attempt,
             max_tokens=8192,
             preferred_model=CODER_MODEL,
             disable_thinking=True,
         )
 
-        code = extract_code(response)
+        code = extract_code(response_details.get("text", ""))
+        finish_reason = str(response_details.get("finish_reason", "")).upper()
         last_code = code
 
-        validation_error = _validate_generated_code(code, expected_steps=expected_steps)
+        validation_error = _validate_generated_code(code, expected_steps=expected_steps, query=query)
+
+        if validation_error and "MAX_TOKENS" in finish_reason:
+            continued_code = code
+            continuation_error = validation_error
+            for hop in range(1, MAX_CONTINUATION_ATTEMPTS + 1):
+                cont_prompt = _continuation_prompt(query, plan_json, continued_code)
+                cont_details = call_llm_detailed(
+                    cont_prompt,
+                    max_tokens=4096,
+                    preferred_model=CODER_MODEL,
+                    disable_thinking=True,
+                )
+                cont_piece = extract_code(cont_details.get("text", ""))
+                if not cont_piece.strip():
+                    break
+
+                continued_code = _stitch_continuation(continued_code, cont_piece)
+                continuation_error = _validate_generated_code(
+                    continued_code,
+                    expected_steps=expected_steps,
+                    query=query,
+                )
+                if not continuation_error:
+                    print(f"[Coder] ✅ Continuation succeeded after {hop} hop(s)")
+                    code = continued_code
+                    validation_error = ""
+                    break
+
+                cont_finish = str(cont_details.get("finish_reason", "")).upper()
+                if "MAX_TOKENS" not in cont_finish:
+                    break
+
+            last_code = code if not validation_error else continued_code
+
         if not validation_error:
             break
 
@@ -199,6 +316,93 @@ def generate_manim_code(query: str, plan: dict = None) -> str:
     
     print(f"[Coder] Generated {code_lines} lines of code")
     return code
+
+
+def revise_manim_code(
+    query: str,
+    plan: dict,
+    existing_code: str,
+    change_request: str,
+    max_attempts: int = 3,
+) -> str:
+    """Apply user-requested changes to existing code with validation and retry."""
+    print(f"[Coder] Revising code with user feedback: {change_request[:120]}")
+
+    plan_payload = _build_coder_plan_payload(plan or {})
+    plan_json = json.dumps(plan_payload, indent=2)
+    prompt = REVISION_PROMPT.format(
+        query=query,
+        plan_json=plan_json,
+        change_request=change_request,
+        existing_code=existing_code,
+    )
+
+    expected_steps = len((plan or {}).get("steps", []))
+    last_code = existing_code
+    last_validation_error = ""
+
+    for attempt in range(1, max_attempts + 1):
+        prompt_for_attempt = prompt
+        if attempt > 1:
+            prompt_for_attempt += (
+                "\n\nIMPORTANT RETRY INSTRUCTION:\n"
+                "The previous revision was invalid. Return the full corrected file.\n"
+                f"Validation failure to fix: {last_validation_error}\n"
+            )
+
+        details = call_llm_detailed(
+            prompt_for_attempt,
+            max_tokens=8192,
+            preferred_model=CODER_MODEL,
+            disable_thinking=True,
+        )
+
+        candidate = extract_code(details.get("text", ""))
+        finish_reason = str(details.get("finish_reason", "")).upper()
+        if not candidate.strip():
+            candidate = last_code
+
+        validation_error = _validate_generated_code(
+            candidate,
+            expected_steps=expected_steps,
+            query=query,
+        )
+
+        if validation_error and "MAX_TOKENS" in finish_reason:
+            continued_code = candidate
+            for _ in range(MAX_CONTINUATION_ATTEMPTS):
+                cont_prompt = _continuation_prompt(query, plan_json, continued_code)
+                cont = call_llm_detailed(
+                    cont_prompt,
+                    max_tokens=4096,
+                    preferred_model=CODER_MODEL,
+                    disable_thinking=True,
+                )
+                cont_piece = extract_code(cont.get("text", ""))
+                if not cont_piece.strip():
+                    break
+                continued_code = _stitch_continuation(continued_code, cont_piece)
+                validation_error = _validate_generated_code(
+                    continued_code,
+                    expected_steps=expected_steps,
+                    query=query,
+                )
+                if not validation_error:
+                    candidate = continued_code
+                    break
+                if "MAX_TOKENS" not in str(cont.get("finish_reason", "")).upper():
+                    break
+
+        if not validation_error:
+            print(f"[Coder] Revision successful on attempt {attempt}")
+            return candidate
+
+        last_code = candidate
+        last_validation_error = validation_error
+        print(f"[Coder] ⚠️  Revision attempt {attempt} failed validation: {validation_error}")
+
+    print("[Coder] ⚠️  Returning last revised code after max attempts")
+    return last_code
 
 
 def extract_code(text: str) -> str:

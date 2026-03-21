@@ -8,11 +8,19 @@ PLANNER_PROMPT = """You are an expert educational animation planner.
 A teacher wants an animation for the following topic.
 Your job is to plan exactly what the animation should show from start to end before any code is written.
 
+A concept expert has already explained this topic clearly. Use this explanation as your source of truth:
+
+--- TEACHER EXPLANATION ---
+{teacher_explanation}
+--- END TEACHER EXPLANATION ---
+
+Using the teacher's breakdown above, plan a visually rich animation that follows the teaching flow.
+
 Think carefully about:
-1. What visual elements are needed for THIS topic (specific labels, values, symbols)
-2. What the step-by-step sequence should be (clear learning progression)
-3. What each voiceover line should EXPLAIN (not announce) at that exact step
-4. What the final summary should show
+1. What visual elements are needed for THIS topic (use the teacher's key terms and values)
+2. What the step-by-step sequence should be (follow the teacher's step-by-step logic)
+3. What each voiceover line should EXPLAIN (use the teacher's insights, not generic descriptions)
+4. What the final summary should show (tie back to the teacher's takeaway)
 
 Return ONLY a JSON object in this exact format:
 {{
@@ -43,8 +51,9 @@ Return ONLY a JSON object in this exact format:
 
 VOICEOVER QUALITY RULES:
 - Each line must teach cause-and-effect, logic, or intuition for that step.
+- Use the teacher's analogy or misconception when relevant to make the voiceover memorable.
 - Avoid placeholders like "Introduction", "Now we do step 2", "This is happening".
-- Include topic-specific terms, values, or relationships.
+- Include topic-specific terms, values, or relationships from the teacher's explanation.
 - Keep each line concise: 12 to 28 words.
 - `steps` and `voiceovers` must have the same length.
 
@@ -188,15 +197,53 @@ def normalize_plan(plan: dict, query: str) -> dict:
     return _normalize_plan(plan, query)
 
 
-def plan_animation(query: str) -> dict:
+def _format_teacher_explanation(explanation: dict) -> str:
+    """Format the teacher's structured explanation into readable text for the planner prompt."""
+    if not explanation:
+        return "No teacher explanation available."
+
+    parts = []
+    parts.append(f"Topic: {explanation.get('topic', '')}")
+    parts.append(f"Core Idea: {explanation.get('core_idea', '')}")
+
+    key_terms = explanation.get("key_terms", [])
+    if key_terms:
+        terms_str = "; ".join(
+            f"{t.get('term', '')}: {t.get('meaning', '')}" for t in key_terms
+        )
+        parts.append(f"Key Terms: {terms_str}")
+
+    steps = explanation.get("step_by_step", [])
+    if steps:
+        steps_str = "\n".join(f"  {i+1}. {s}" for i, s in enumerate(steps))
+        parts.append(f"Step-by-Step Process:\n{steps_str}")
+
+    analogy = explanation.get("analogy", "")
+    if analogy:
+        parts.append(f"Analogy: {analogy}")
+
+    misconception = explanation.get("misconception", "")
+    if misconception:
+        parts.append(f"Common Misconception: {misconception}")
+
+    takeaway = explanation.get("takeaway", "")
+    if takeaway:
+        parts.append(f"Key Takeaway: {takeaway}")
+
+    return "\n".join(parts)
+
+
+def plan_animation(query: str, teacher_explanation: dict = None) -> dict:
     """
-    Takes a teacher's request and returns a structured plan
-    before any code is generated.
+    Takes a teacher's request and an optional concept explanation,
+    then returns a structured animation plan before any code is generated.
     """
     print(f"[Planner] Planning animation for: {query}")
 
+    explanation_text = _format_teacher_explanation(teacher_explanation)
+
     response = call_llm(
-        PLANNER_PROMPT.format(query=query),
+        PLANNER_PROMPT.format(query=query, teacher_explanation=explanation_text),
         max_tokens=1800,
         response_mime_type="application/json",
         response_schema=PLAN_RESPONSE_SCHEMA,

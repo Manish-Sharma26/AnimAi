@@ -162,7 +162,29 @@ def call_llm(
     disable_thinking: bool = False,
 ) -> str:
     """
-    Sends a prompt to Gemini via google-genai and returns plain text.
+    Backward-compatible helper returning only text.
+    """
+    result = call_llm_detailed(
+        prompt=prompt,
+        max_tokens=max_tokens,
+        response_mime_type=response_mime_type,
+        response_schema=response_schema,
+        preferred_model=preferred_model,
+        disable_thinking=disable_thinking,
+    )
+    return result["text"]
+
+
+def call_llm_detailed(
+    prompt: str,
+    max_tokens: int = 3000,
+    response_mime_type: str = None,
+    response_schema: Any = None,
+    preferred_model: str = None,
+    disable_thinking: bool = False,
+) -> dict:
+    """
+    Sends a prompt to Gemini and returns text + diagnostics metadata.
     """
     last_error = None
     candidates = _build_model_candidates(preferred_model=preferred_model)
@@ -204,7 +226,13 @@ def call_llm(
                             f"Model '{model_name}' returned invalid JSON: {parse_err}"
                         )
                         continue
-                return text
+                return {
+                    "text": text,
+                    "model": model_name,
+                    "finish_reason": finish_reason,
+                    "candidates_tried": candidates,
+                    "error": None,
+                }
 
             # Empty response payloads occasionally happen on quota/safety edges.
             last_error = RuntimeError(f"Model '{model_name}' returned no text content")
@@ -213,8 +241,9 @@ def call_llm(
             last_error = err
             continue
 
-    raise RuntimeError(
+    error = RuntimeError(
         "Gemini request failed for all configured/discovered models. "
         "Check your API key, model access, and quota/billing in Google AI Studio. "
         f"Tried: {candidates}. Last error: {last_error}"
     )
+    raise error

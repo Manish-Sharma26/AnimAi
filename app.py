@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import json
-from agent.orchestrator import build_plan, run_agent_with_plan
+from agent.orchestrator import build_plan, run_agent_with_plan, apply_user_changes
 from agent.planner import normalize_plan
 from agent.feedback import save_good_example, get_feedback_stats
 
@@ -44,6 +44,12 @@ if "approved_plan" not in st.session_state:
     st.session_state["approved_plan"] = None
 if "plan_prompt" not in st.session_state:
     st.session_state["plan_prompt"] = ""
+if "last_result" not in st.session_state:
+    st.session_state["last_result"] = None
+if "last_query" not in st.session_state:
+    st.session_state["last_query"] = ""
+if "last_plan" not in st.session_state:
+    st.session_state["last_plan"] = None
 
 # Show feedback stats if any
 stats = get_feedback_stats()
@@ -89,7 +95,7 @@ if prompt and st.session_state.get("plan_prompt") and prompt != st.session_state
     st.session_state["approved_plan"] = None
 
 if plan_btn and prompt:
-    with st.spinner("Gemini is building your animation plan..."):
+    with st.spinner("🧑‍🏫 Teacher is explaining the concept, then building your animation plan..."):
         draft_plan = build_plan(prompt)
     st.session_state["draft_plan"] = draft_plan
     st.session_state["approved_plan"] = None
@@ -101,6 +107,31 @@ if st.session_state.get("draft_plan"):
     st.markdown("### 🧠 Review the plan before generation")
 
     draft_plan = st.session_state["draft_plan"]
+
+    # Show Teacher Explanation if available
+    teacher_exp = draft_plan.get("teacher_explanation", {})
+    if teacher_exp:
+        with st.expander("🧑‍🏫 Teacher's Concept Explanation", expanded=True):
+            st.markdown(f"**Core Idea:** {teacher_exp.get('core_idea', '')}")
+            key_terms = teacher_exp.get("key_terms", [])
+            if key_terms:
+                terms_md = ", ".join(f"**{t.get('term', '')}** ({t.get('meaning', '')})" for t in key_terms)
+                st.markdown(f"**Key Terms:** {terms_md}")
+            steps_list = teacher_exp.get("step_by_step", [])
+            if steps_list:
+                st.markdown("**Step-by-Step:**")
+                for i, s in enumerate(steps_list, 1):
+                    st.markdown(f"&nbsp;&nbsp;{i}. {s}")
+            analogy = teacher_exp.get("analogy", "")
+            if analogy:
+                st.markdown(f"💡 **Analogy:** {analogy}")
+            misconception = teacher_exp.get("misconception", "")
+            if misconception:
+                st.markdown(f"⚠️ **Common Misconception:** {misconception}")
+            takeaway = teacher_exp.get("takeaway", "")
+            if takeaway:
+                st.markdown(f"🎯 **Takeaway:** {takeaway}")
+
     st.markdown('<div class="plan-box">', unsafe_allow_html=True)
     st.markdown(f"**Title:** {draft_plan.get('title', '')}")
     st.markdown(f"**Visual Style:** {draft_plan.get('visual_style', '')}")
@@ -182,6 +213,9 @@ if generate_btn and prompt:
     try:
         approved_plan = st.session_state.get("approved_plan")
         result = run_agent_with_plan(prompt, approved_plan)
+        st.session_state["last_result"] = result
+        st.session_state["last_query"] = prompt
+        st.session_state["last_plan"] = approved_plan
 
         # Update steps based on result
         show_step(p_plan,    "✅", "Animation planned!", "#6AB04C")
@@ -242,6 +276,9 @@ if generate_btn and prompt:
                         st.session_state["draft_plan"] = None
                         st.session_state["approved_plan"] = None
                         st.session_state["plan_prompt"] = ""
+                        st.session_state["last_result"] = None
+                        st.session_state["last_query"] = ""
+                        st.session_state["last_plan"] = None
                         st.rerun()
 
                 # Feedback section
@@ -295,6 +332,57 @@ if generate_btn and prompt:
         import traceback
         with st.expander("Details"):
             st.code(traceback.format_exc())
+
+# ── Post-Generation Revision Loop ─────────────────────────────────────────────
+last_result = st.session_state.get("last_result") or {}
+if last_result.get("status") == "success":
+    st.divider()
+    st.markdown("### ✏️ Suggest changes to this video")
+    st.caption("Describe what to change; AnimAI will revise existing code and retry rendering up to 3 times.")
+
+    change_request = st.text_area(
+        "What should be changed?",
+        placeholder="e.g. Make the full binary tree visible, reduce label overlap, and slow down traversal narration.",
+        height=110,
+        key="change_request_input",
+    )
+
+    apply_changes_btn = st.button(
+        "♻️ Apply Changes (max 3 tries)",
+        use_container_width=True,
+        disabled=not change_request.strip(),
+    )
+
+    if apply_changes_btn:
+        with st.spinner("Applying requested changes and regenerating video..."):
+            revised = apply_user_changes(
+                user_query=st.session_state.get("last_query", prompt),
+                approved_plan=st.session_state.get("last_plan") or last_result.get("plan", {}),
+                existing_code=last_result.get("code", ""),
+                change_request=change_request.strip(),
+            )
+
+        if revised.get("status") == "success":
+            st.session_state["last_result"] = revised
+            st.session_state["last_plan"] = revised.get("plan") or st.session_state.get("last_plan")
+            st.success("✅ Changes applied successfully. Updated video is ready below.")
+
+            revised_path = revised.get("video_path", "")
+            if revised_path and os.path.exists(revised_path):
+                with open(revised_path, "rb") as f:
+                    revised_video = f.read()
+                st.video(revised_video)
+                st.download_button(
+                    "⬇️ Download Updated MP4",
+                    revised_video,
+                    "animation_updated.mp4",
+                    "video/mp4",
+                    use_container_width=True,
+                )
+        else:
+            st.error("❌ Could not apply changes after 3 revision tries.")
+            with st.expander("🔍 Revision Error Details"):
+                st.code((revised.get("error") or "Unknown error")[:1200])
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.divider()

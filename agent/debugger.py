@@ -1,5 +1,9 @@
+import os
+
 from agent.llm import call_llm
 from agent.coder import extract_code
+
+DEBUGGER_MODEL = os.getenv("GEMINI_DEBUGGER_MODEL", "gemini-2.5-flash")
 
 DEBUGGER_PROMPT = """You are an expert Manim debugger.
 Your ONLY job: fix the specific compilation error with minimal changes.
@@ -58,7 +62,12 @@ def debug_manim_code(code: str, error: str) -> str:
         return deterministic_fix
 
     prompt = DEBUGGER_PROMPT.format(code=code, error=error)
-    response = call_llm(prompt, max_tokens=6000)
+    response = call_llm(
+        prompt,
+        max_tokens=6000,
+        preferred_model=DEBUGGER_MODEL,
+        disable_thinking=True,
+    )
     fixed_code = extract_code(response)
 
     print(f"[Debugger] Fixed code generated ({len(fixed_code.splitlines())} lines)")
