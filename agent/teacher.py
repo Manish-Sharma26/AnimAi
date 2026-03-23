@@ -2,7 +2,7 @@ import json
 import os
 from agent.llm import call_llm
 
-TEACHER_MODEL = os.getenv("GEMINI_TEACHER_MODEL", "gemini-2.5-flash")
+TEACHER_MODEL = os.getenv("GEMINI_TEACHER_MODEL", "gemini-3.0-flash")
 
 TEACHER_PROMPT = """You are a world-class teacher who explains concepts to students in a simple, clear, and engaging way.
 
@@ -34,7 +34,9 @@ Return ONLY a JSON object in this exact format:
     ],
     "analogy": "A relatable real-world analogy",
     "misconception": "The most common mistake students make about this",
-    "takeaway": "The single most important thing to remember"
+    "takeaway": "The single most important thing to remember",
+    "visual_complexity": "low or medium or high",
+    "max_simultaneous_objects": 8
 }}
 
 QUALITY RULES:
@@ -43,6 +45,8 @@ QUALITY RULES:
 - Keep each step_by_step entry to 1-2 sentences max.
 - The analogy should be something from everyday life.
 - Generate 3 to 6 step_by_step entries.
+- Estimate visual_complexity: "low" (≤5 simultaneous objects on screen), "medium" (6-10), "high" (11+).
+- Set max_simultaneous_objects to a realistic count for the topic — this tells the animator how many things can be on screen at once.
 
 Return ONLY the JSON. No explanation before or after."""
 
@@ -66,6 +70,8 @@ TEACHER_RESPONSE_SCHEMA = {
         "analogy": {"type": "STRING"},
         "misconception": {"type": "STRING"},
         "takeaway": {"type": "STRING"},
+        "visual_complexity": {"type": "STRING"},
+        "max_simultaneous_objects": {"type": "INTEGER"},
     },
     "required": [
         "topic",
@@ -75,6 +81,8 @@ TEACHER_RESPONSE_SCHEMA = {
         "analogy",
         "misconception",
         "takeaway",
+        "visual_complexity",
+        "max_simultaneous_objects",
     ],
 }
 
@@ -94,6 +102,8 @@ def _normalize_explanation(explanation: dict, query: str) -> dict:
     safe["analogy"] = safe.get("analogy") or ""
     safe["misconception"] = safe.get("misconception") or ""
     safe["takeaway"] = safe.get("takeaway") or f"The key idea behind {query}"
+    safe["visual_complexity"] = safe.get("visual_complexity") or "medium"
+    safe["max_simultaneous_objects"] = int(safe.get("max_simultaneous_objects") or 8)
 
     return safe
 
@@ -107,7 +117,7 @@ def teach_concept(query: str) -> dict:
 
     response = call_llm(
         TEACHER_PROMPT.format(query=query),
-        max_tokens=1200,
+        max_tokens=4096,
         response_mime_type="application/json",
         response_schema=TEACHER_RESPONSE_SCHEMA,
         preferred_model=TEACHER_MODEL,

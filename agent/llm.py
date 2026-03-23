@@ -17,12 +17,13 @@ if not GEMINI_API_KEY:
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Prefer highest quality first, then faster/cheaper fallbacks.
-PREFERRED_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
+PREFERRED_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.0-flash")
 MODEL_PREFERENCE_ORDER = [
     PREFERRED_MODEL,
-    "gemini-2.5-pro",
+    "gemini-3.0-flash",
     "gemini-2.5-flash",
-    "gemini-2.0-flash",
+    "gemini-3.0-flash-lite",
+    "gemini-2.5-flash-lite",
 ]
 
 
@@ -69,9 +70,10 @@ def _build_model_candidates(preferred_model: str = None) -> List[str]:
     effective_preferred = _normalize_model_name(preferred_model or PREFERRED_MODEL)
     preference_order = [
         effective_preferred,
-        "gemini-2.5-pro",
+        "gemini-3.0-flash",
         "gemini-2.5-flash",
-        "gemini-2.0-flash",
+        "gemini-3.0-flash-lite",
+        "gemini-2.5-flash-lite",
     ]
 
     # Always try the user-configured preferred model first, even if discovery
@@ -80,9 +82,9 @@ def _build_model_candidates(preferred_model: str = None) -> List[str]:
     if preferred_normalized:
         ordered.append(preferred_normalized)
 
-    # If user asks for 3.1-pro, also try known 3.1 pro aliases before fallbacks.
-    if preferred_normalized == "gemini-3.1-pro":
-        for alias in ["gemini-3.1-pro-preview", "gemini-3.1-pro-preview-customtools"]:
+    # If user asks for 3.0-flash, also try known aliases before fallbacks.
+    if preferred_normalized == "gemini-3.0-flash":
+        for alias in ["gemini-3.0-flash-preview", "gemini-3.0-flash-exp"]:
             if alias not in ordered:
                 ordered.append(alias)
 

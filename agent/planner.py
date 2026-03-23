@@ -1,8 +1,9 @@
 import json
 import os
 from agent.llm import call_llm
+from agent.topic_hints import get_topic_hints, format_hints_for_prompt
 
-PLANNER_MODEL = os.getenv("GEMINI_PLANNER_MODEL", "gemini-2.5-flash")
+PLANNER_MODEL = os.getenv("GEMINI_PLANNER_MODEL", "gemini-3.0-flash")
 
 PLANNER_PROMPT = """You are an expert educational animation planner.
 A teacher wants an animation for the following topic.
@@ -21,6 +22,7 @@ Think carefully about:
 2. What the step-by-step sequence should be (follow the teacher's step-by-step logic)
 3. What each voiceover line should EXPLAIN (use the teacher's insights, not generic descriptions)
 4. What the final summary should show (tie back to the teacher's takeaway)
+5. How to CLEAN UP between steps so elements never pile up on screen
 
 Return ONLY a JSON object in this exact format:
 {{
@@ -29,10 +31,10 @@ Return ONLY a JSON object in this exact format:
     "opening_scene": "How the first 3-6 seconds should start visually",
     "elements": ["list", "of", "visual", "elements", "needed"],
     "steps": [
-        "Step 1: concrete visual action",
-        "Step 2: concrete visual action",
-        "Step 3: concrete visual action",
-        "Step 4: concrete visual action"
+        "Step 1: concrete visual action. Remove: [nothing]. Keep: [title]",
+        "Step 2: concrete visual action. Remove: [intro text]. Keep: [main diagram]",
+        "Step 3: concrete visual action. Remove: [step 2 highlights]. Keep: [main diagram]",
+        "Step 4: concrete visual action. Remove: [all previous]. Show: [result summary]"
     ],
     "voiceovers": [
         "One or two explanatory sentences for step 1",
@@ -41,8 +43,8 @@ Return ONLY a JSON object in this exact format:
         "One or two explanatory sentences for step 4"
     ],
     "full_script": [
-        "Beat 1 from start to finish: what appears, what changes, and what is said",
-        "Beat 2 from start to finish: what appears, what changes, and what is said"
+        "Beat 1: what appears, what is removed from before, and what is said",
+        "Beat 2: what appears, what is removed from before, and what is said"
     ],
     "duration_seconds": 45,
     "closing_scene": "How the final 3-6 seconds should end visually",
@@ -63,6 +65,14 @@ PLANNING RULES:
 - Prefer progressive reveal: setup -> process -> key transition -> result.
 - `full_script` must cover the full video from opening to closing with one entry per beat.
 - `full_script` should have the same length as `steps` and `voiceovers`.
+
+SPATIAL BUDGET RULES — CRITICAL FOR PREVENTING OVERLAP:
+- Never plan more than 8-10 objects on screen simultaneously. The teacher estimates max_simultaneous_objects for this topic — respect it.
+- Each step MUST specify which elements from the PREVIOUS step should be REMOVED (FadeOut) before new elements appear.
+- Write removal instructions in each step like: "Remove: [intro text, subtitle]. Keep: [main diagram]."
+- Between major phases (e.g., setup → process → result), include an explicit transition: "FadeOut all current elements, then show [next phase]."
+- When possible, TRANSFORM existing elements rather than removing and recreating (e.g., recolor a box, move it, resize it).
+- For topics with many items (arrays, trees, large diagrams): plan to show portions at a time, not everything simultaneously.
 
 VISUAL STYLE GUIDE:
 - array_boxes: for search algorithms, data structures, memory
@@ -206,6 +216,10 @@ def _format_teacher_explanation(explanation: dict) -> str:
     parts.append(f"Topic: {explanation.get('topic', '')}")
     parts.append(f"Core Idea: {explanation.get('core_idea', '')}")
 
+    visual_complexity = explanation.get("visual_complexity", "medium")
+    max_objects = explanation.get("max_simultaneous_objects", 8)
+    parts.append(f"Visual Complexity: {visual_complexity} (max {max_objects} simultaneous objects on screen)")
+
     key_terms = explanation.get("key_terms", [])
     if key_terms:
         terms_str = "; ".join(
@@ -242,9 +256,16 @@ def plan_animation(query: str, teacher_explanation: dict = None) -> dict:
 
     explanation_text = _format_teacher_explanation(teacher_explanation)
 
+    # Look up topic-specific visual hints
+    hints = get_topic_hints(query)
+    hints_text = format_hints_for_prompt(hints)
+    if hints_text:
+        explanation_text += f"\n\nTopic Visual Hints (based on how this topic is typically animated):\n{hints_text}"
+        print(f"[Planner] Found topic hints: {hints.get('visual_style', 'N/A')}")
+
     response = call_llm(
         PLANNER_PROMPT.format(query=query, teacher_explanation=explanation_text),
-        max_tokens=1800,
+        max_tokens=4096,
         response_mime_type="application/json",
         response_schema=PLAN_RESPONSE_SCHEMA,
         preferred_model=PLANNER_MODEL,
@@ -297,7 +318,7 @@ def plan_animation(query: str, teacher_explanation: dict = None) -> dict:
             )
             repaired = call_llm(
                 repair_prompt,
-                max_tokens=1800,
+                max_tokens=4096,
                 response_mime_type="application/json",
                 response_schema=PLAN_RESPONSE_SCHEMA,
                 preferred_model=PLANNER_MODEL,
