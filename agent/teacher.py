@@ -2,7 +2,7 @@ import json
 import os
 from agent.llm import call_llm
 
-TEACHER_MODEL = os.getenv("GEMINI_TEACHER_MODEL", "gemini-3.0-flash")
+TEACHER_MODEL = os.getenv("GEMINI_TEACHER_MODEL", "gemini-2.5-flash")
 
 TEACHER_PROMPT = """You are a world-class teacher who explains concepts to students in a simple, clear, and engaging way.
 

@@ -3,7 +3,7 @@ import os
 from agent.llm import call_llm
 from agent.topic_hints import get_topic_hints, format_hints_for_prompt
 
-PLANNER_MODEL = os.getenv("GEMINI_PLANNER_MODEL", "gemini-3.0-flash")
+PLANNER_MODEL = os.getenv("GEMINI_PLANNER_MODEL", "gemini-2.5-flash")
 
 PLANNER_PROMPT = """You are an expert educational animation planner.
 A teacher wants an animation for the following topic.

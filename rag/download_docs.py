@@ -12,6 +12,7 @@ import re
 
 # Key Manim documentation pages to download
 MANIM_DOC_URLS = [
+    # Core Manim source docs
     "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/geometry/arc.py",
     "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/geometry/polygram.py",
     "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/geometry/line.py",
@@ -24,6 +25,11 @@ MANIM_DOC_URLS = [
     "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/graph.py",
     "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/table.py",
     "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/coordinate_systems.py",
+    # Manim-Voiceover source docs
+    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/manim_voiceover/voiceover_scene.py",
+    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/manim_voiceover/services/gtts.py",
+    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/manim_voiceover/tracker.py",
+    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/manim_voiceover/helper.py",
 ]
 
 # Also add handcrafted pattern examples for common animation types
@@ -217,6 +223,60 @@ class LinkedListExample(Scene):
         
         self.play(LaggedStart(*[FadeIn(n, shift=RIGHT*0.3) for n in nodes], lag_ratio=0.15))
         self.play(LaggedStart(*[Create(a) for a in arrows], lag_ratio=0.1))
+"""
+    },
+    {
+        "title": "VoiceoverScene with GTTSService pattern",
+        "content": """
+# Pattern: Using VoiceoverScene with GTTSService for narrated educational animations
+from manim import *
+from manim_voiceover import VoiceoverScene
+from manim_voiceover.services.gtts import GTTSService
+
+class NarratedExample(VoiceoverScene):
+    def construct(self):
+        self.set_speech_service(GTTSService(lang="en"))
+        self.camera.background_color = "#0F0F1A"
+
+        title = Text("Example Topic", font_size=48, color="#4FACFE")
+        title.to_edge(UP, buff=0.5)
+        underline = Line(LEFT, RIGHT, color="#4FACFE").scale(0.5)
+        underline.next_to(title, DOWN, buff=0.3)
+        self.play(Write(title), Create(underline))
+
+        # VOICEOVER: Introduction to the concept
+        with self.voiceover(text="Welcome. Let us explore this concept step by step.") as tracker:
+            intro = Text("Key Concept", font_size=36, color=WHITE)
+            intro.next_to(title, DOWN, buff=1.0)
+            self.play(FadeIn(intro))
+
+        # VOICEOVER: Step 1 explanation
+        with self.voiceover(text="First, we set up the main elements that we will work with.") as tracker:
+            self.play(FadeOut(intro))
+            self.wait(0.3)
+            circle = Circle(radius=1.0, color="#4FACFE", stroke_width=3)
+            circle.move_to(ORIGIN)
+            label = Text("Element A", font_size=24, color=WHITE).next_to(circle, DOWN, buff=0.3)
+            step1_group = VGroup(circle, label)
+            self.play(Create(circle), FadeIn(label))
+
+        # VOICEOVER: Step 2 — transform and highlight
+        with self.voiceover(text="Now watch as the element transforms to show the result.") as tracker:
+            self.play(circle.animate.set_fill("#6AB04C", opacity=0.8))
+            result_label = Text("Result!", font_size=28, color="#6AB04C")
+            result_label.next_to(circle, UP, buff=0.3)
+            self.play(FadeIn(result_label))
+
+        # VOICEOVER: Closing summary
+        with self.voiceover(text="And that is how this concept works in practice.") as tracker:
+            self.play(FadeOut(step1_group), FadeOut(result_label))
+            self.wait(0.3)
+            banner = RoundedRectangle(corner_radius=0.2, width=6, height=1.2)
+            banner.set_fill("#0A2A0A", opacity=1).set_stroke("#6AB04C", width=3)
+            banner_text = Text("Concept Complete!", font_size=36, color="#6AB04C", weight=BOLD)
+            banner_text.move_to(banner)
+            self.play(FadeIn(VGroup(banner, banner_text), scale=1.2))
+            self.wait(2.0)
 """
     }
 ]

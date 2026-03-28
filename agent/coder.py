@@ -2,11 +2,12 @@ import re
 import json
 import os
 from agent.llm import call_llm_detailed
+from agent.feedback import get_learned_examples
+from rag.retriever import retrieve as rag_retrieve
 
-CODER_MODEL = os.getenv("GEMINI_CODER_MODEL", "gemini-3.0-flash")
+CODER_MODEL = os.getenv("GEMINI_CODER_MODEL", "gemini-2.5-flash")
 MAX_GENERATION_ATTEMPTS = 3
 MAX_CONTINUATION_ATTEMPTS = 2
-
 
 def _build_coder_plan_payload(plan: dict) -> dict:
     """Keep only essential planner fields to reduce prompt size and truncation risk."""
@@ -41,6 +42,15 @@ STRICT CODE RULES:
 4. In `construct()`, call `self.set_speech_service(GTTSService(lang=\"en\"))` before any narration
 5. Add # VOICEOVER: comment and matching `with self.voiceover(text=...)` block before every meaningful animation block
 6. Always set: self.camera.background_color = "#0F0F1A"
+7. NEVER use `import os` — it is not needed and will break in the sandbox.
+
+SANDBOX CONSTRAINT RULES — CRITICAL:
+- The code runs inside a Docker container with ONLY scene.py mounted. NO external files exist.
+- NEVER use ImageMobject, SVGMobject, or any file-loading class. These WILL fail because no image/SVG/asset files are available.
+- NEVER reference external files like .png, .svg, .jpg, .gif, .ico, or any asset path.
+- ALWAYS create ALL visuals programmatically using Manim primitives: shapes (Circle, Rectangle, Triangle, Polygon, Arc, Arrow, Line), Text, MathTex, etc.
+- For objects like cannons, balls, rockets, etc.: build them from basic shapes (e.g., a cannon = Rectangle + Triangle, a ball = Circle).
+- NEVER use `import os` or any filesystem operations.
 
 DESIGN RULES — ALWAYS FOLLOW:
 - Background: "#0F0F1A" (dark navy)
@@ -48,9 +58,12 @@ DESIGN RULES — ALWAYS FOLLOW:
 - Use LaggedStart for staggered entrance animations
 - Use smooth run_time=0.6 transitions
 - Always add title with underline at top
+- NEVER use `.to_center()` — it does not exist in Manim. Use `.move_to(ORIGIN)` instead.
 - Always end with a result banner
 
 COLOR RULES — CRITICAL FOR VISIBILITY:
+- ONLY these named color constants are guaranteed to exist in Manim: WHITE, BLACK, RED, GREEN, BLUE, YELLOW, ORANGE, PINK, PURPLE, TEAL, GOLD, GRAY, GREY, MAROON, RED_A-RED_E, BLUE_A-BLUE_E, GREEN_A-GREEN_E, GREY_A-GREY_E.
+- For ANY other color (brown, cyan, magenta, lime, navy, etc.), ALWAYS use hex strings like "#8B4513" (brown), "#00CED1" (cyan), "#FF00FF" (magenta). NEVER use bare names like BROWN, CYAN, LIGHT_BROWN — they do NOT exist and will cause NameError.
 - The background is very dark (#0F0F1A). Every color you choose MUST have strong contrast against it.
 - NEVER use BLACK, DARK_BLUE, DARK_GRAY, "#000000", "#111111", or any very dark color for strokes or fills — they will be INVISIBLE.
 - For text on dark backgrounds: use WHITE, "#E0E0E0", or any bright/light color.
@@ -121,6 +134,11 @@ with self.voiceover(text="..."):
     # ... step-specific animations ...
 ```
 
+RELEVANT MANIM API PATTERNS (use these as reference for correct API usage):
+{manim_docs}
+
+{feedback_examples}
+
 ANIMATION PLAN (use this as the source of truth):
 {plan_json}
 
@@ -165,6 +183,9 @@ LAYOUT RULES:
 - After building VGroups with 3+ elements, call .scale_to_fit_width(config.frame_width - 2).
 - For text labels: font_size=22 or smaller in dense scenes.
 - Use .next_to() for relative positioning instead of absolute coordinates.
+
+RELEVANT MANIM API PATTERNS (use these as reference for correct API usage):
+{manim_docs}
 
 TOPIC:
 {query}
@@ -228,6 +249,16 @@ def _validate_generated_code(code: str, expected_steps: int, query: str = "") ->
     if "with self.voiceover(" not in code:
         return "missing voiceover blocks"
 
+    # Sandbox constraint checks: no external assets or invalid APIs
+    if "ImageMobject" in code:
+        return "ImageMobject is forbidden — no image files exist in the sandbox; draw shapes programmatically instead"
+    if "SVGMobject" in code:
+        return "SVGMobject is forbidden — no SVG files exist in the sandbox; draw shapes programmatically instead"
+    if re.search(r'^\s*import\s+os\b', code, re.MULTILINE) or re.search(r'^\s*from\s+os\b', code, re.MULTILINE):
+        return "import os is forbidden — no filesystem operations are allowed in the sandbox"
+    if ".to_center()" in code:
+        return ".to_center() does not exist in Manim — use .move_to(ORIGIN) instead"
+
     if _likely_truncated_tail(code):
         return "output appears truncated near the end"
 
@@ -271,10 +302,41 @@ def _continuation_prompt(query: str, plan_json: str, partial_code: str) -> str:
     )
 
 
+def _build_rag_context(query: str) -> str:
+    """Retrieve relevant Manim doc patterns via RAG. Returns empty string if unavailable."""
+    try:
+        context = rag_retrieve(query, k=3)
+        if context:
+            print(f"[Coder] RAG injected {len(context)} chars of Manim API context")
+        return context or "(no RAG context available)"
+    except Exception as e:
+        print(f"[Coder] RAG retrieval failed: {e}")
+        return "(no RAG context available)"
+
+
+def _build_feedback_section(category: str) -> str:
+    """Build few-shot section from user-approved examples. Returns empty string if none."""
+    try:
+        learned = get_learned_examples(category, k=2)
+        if not learned:
+            return ""
+        parts = ["PROVEN EXAMPLES (these compiled successfully and were approved by users — follow their patterns):"]
+        for ex in learned:
+            code_snippet = (ex.get("code") or "")[:1000]
+            parts.append(f"Query: {ex.get('query', '')}\nCode snippet:\n{code_snippet}\n---")
+        section = "\n".join(parts)
+        print(f"[Coder] Injected {len(learned)} feedback example(s) for category '{category}'")
+        return section
+    except Exception as e:
+        print(f"[Coder] Feedback retrieval failed: {e}")
+        return ""
+
+
 def generate_manim_code(query: str, plan: dict = None) -> str:
     """
     Calls Gemini to generate Manim code from the planner output.
     Guards against truncation and enforces completeness.
+    Injects RAG context and feedback examples for higher quality.
     """
     print(f"[Coder] Generating code for: {query}")
 
@@ -282,9 +344,18 @@ def generate_manim_code(query: str, plan: dict = None) -> str:
     plan_payload = _build_coder_plan_payload(plan)
     plan_json = json.dumps(plan_payload, indent=2)
 
+    # Retrieve relevant Manim API context via RAG
+    manim_docs = _build_rag_context(query)
+
+    # Retrieve user-approved feedback examples
+    category = plan.get("visual_style", "diagram")
+    feedback_examples = _build_feedback_section(category)
+
     prompt = CODER_PROMPT.format(
         query=query,
         plan_json=plan_json,
+        manim_docs=manim_docs,
+        feedback_examples=feedback_examples,
     )
     expected_steps = len(plan.get("steps", []))
     last_code = ""
@@ -396,9 +467,14 @@ def revise_manim_code(
 
     plan_payload = _build_coder_plan_payload(plan or {})
     plan_json = json.dumps(plan_payload, indent=2)
+
+    # Retrieve relevant Manim API context via RAG
+    manim_docs = _build_rag_context(query)
+
     prompt = REVISION_PROMPT.format(
         query=query,
         plan_json=plan_json,
+        manim_docs=manim_docs,
         change_request=change_request,
         existing_code=existing_code,
     )
