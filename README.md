@@ -1,16 +1,49 @@
 # 🎬 AnimAI Studio
 
-AI-powered educational animation generator that creates professional Manim animations from natural language descriptions.
+AI-powered educational animation generator that creates professional Manim animations from natural language descriptions using a multi-agent pipeline.
 
 ## ✨ Features
 
-- 🤖 **AI-Powered Planning**: Automatic animation structure planning using LLM
+- 🤖 **Multi-Agent Pipeline**: Teacher → Planner → Coder → Validator → Debugger orchestration
+- 🧑‍🏫 **Teacher Agent**: Breaks down concepts with analogies, key terms, and step-by-step explanations before planning
+- 🎯 **Intent Classification**: Automatically detects bare topics, simple explanations, and detailed requests
 - 🎨 **Professional Design System**: Consistent dark theme with stunning visuals
-- 🔄 **Self-Healing Code**: Automatic debugging and retry logic
+- 🔄 **Self-Healing Code**: Automatic debugging and retry logic with structured failure logging
 - 🎙️ **Native Manim Voiceover**: Narration rendered directly during Manim scene execution
-- 📚 **RAG-Enhanced**: Retrieves relevant Manim patterns from documentation
+- 📚 **RAG-Enhanced**: Retrieves relevant Manim patterns from documentation via FAISS
 - 📈 **Learning System**: Improves over time from user feedback
+- ✅ **Video Validator**: Checks generated code for segment structure, voiceover coverage, and cleanup patterns
+- 📊 **Failure Analytics**: Persistent failure logging with tag-based analysis and viewer UI
 - 🔒 **Safe Execution**: Docker-isolated code compilation
+
+## 🏗️ Architecture
+
+```
+User Query
+    │
+    ▼
+┌──────────────┐
+│ Intent       │── bare_topic / simple_explanation / detailed
+│ Classifier   │
+└──────┬───────┘
+       ▼
+┌──────────────┐    ┌──────────────┐
+│ Teacher      │───▶│ Planner      │── structured plan with voiceover script
+│ Agent        │    │ Agent        │
+└──────────────┘    └──────┬───────┘
+                           ▼
+                    ┌──────────────┐    ┌──────────────┐
+                    │ Coder        │───▶│ Validator    │── checks segment structure
+                    │ Agent        │    │ Agent        │
+                    └──────┬───────┘    └──────────────┘
+                           ▼
+                    ┌──────────────┐    ┌──────────────┐
+                    │ Docker       │◀──▶│ Debugger     │── self-healing retry loop
+                    │ Sandbox      │    │ Agent        │
+                    └──────┬───────┘    └──────────────┘
+                           ▼
+                     Final MP4 Video
+```
 
 ## 📋 Prerequisites
 
@@ -24,8 +57,8 @@ AI-powered educational animation generator that creates professional Manim anima
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/animai-studio.git
-   cd animai-studio
+   git clone https://github.com/Manish-Sharma26/AnimAi.git
+   cd AnimAi
    ```
 
 2. **Create virtual environment**
@@ -70,7 +103,7 @@ AI-powered educational animation generator that creates professional Manim anima
    ```bash
    python rag/download_docs.py
    ```
-   This downloads Manim documentation and builds the search index (~2-3 minutes).
+   This downloads Manim documentation and builds the FAISS search index (~2-3 minutes).
 
 7. **Run the application**
    ```bash
@@ -84,10 +117,11 @@ AI-powered educational animation generator that creates professional Manim anima
 ## 🎯 Usage
 
 1. Enter a description of the animation you want (e.g., "Animate bubble sort with array 5 2 8 1 9")
-2. Click "Generate Animation"
-3. Wait for the AI to plan, code, and compile the narrated animation
-4. Watch your animation and download the MP4
-5. Give feedback to help the system learn!
+2. Click **Generate Plan** — the Teacher agent explains the concept, then the Planner builds a structured animation plan
+3. Review and optionally edit the plan JSON
+4. Click **Generate Video With Voice** to compile the narrated animation
+5. Watch your animation and download the MP4
+6. Give feedback to help the system learn!
 
 ## 📁 Project Structure
 
@@ -95,37 +129,32 @@ AI-powered educational animation generator that creates professional Manim anima
 animai-studio/
 ├── app.py                      # Streamlit web interface
 ├── Dockerfile                  # Docker image configuration
-├── agent/                      # AI agent system
+├── PROJECT_REPORT.md           # Detailed project documentation
+├── agent/                      # Multi-agent system
 │   ├── orchestrator.py         # Main pipeline coordinator
+│   ├── intent.py               # Query intent classifier (bare_topic / simple / detailed)
+│   ├── teacher.py              # Concept explanation agent (analogies, key terms)
 │   ├── planner.py              # Animation structure planner
 │   ├── coder.py                # Manim code generator
-│   ├── debugger.py             # Automatic error fixing
-│   ├── llm.py                  # LLM API wrapper
+│   ├── debugger.py             # Automatic error fixing with self-healing loop
+│   ├── validator.py            # Post-generation video structure validator
+│   ├── failure_logger.py       # Persistent failure logging and analytics
+│   ├── topic_hints.py          # Topic-specific Manim patterns and hints
+│   ├── llm.py                  # LLM API wrapper (Gemini)
 │   └── feedback.py             # Learning from user feedback
 ├── sandbox/                    # Isolated execution
-│   ├── sandbox.py              # Docker-based Manim runner
-│   └── audio_merger.py         # Legacy fallback TTS/merge utilities
+│   └── sandbox.py              # Docker-based Manim runner
 ├── rag/                        # Retrieval-Augmented Generation
 │   ├── download_docs.py        # Doc scraper and indexer
-│   ├── retriever.py            # Vector similarity search
+│   ├── retriever.py            # FAISS vector similarity search
 │   ├── manim_chunks.json       # Documentation chunks
 │   └── manim_docs.index        # FAISS search index
-└── outputs/                    # Generated videos
-```
-
-## 🧪 Testing
-
-Run individual tests to verify setup:
-
-```bash
-# Test Manim sandbox
-python test_sandbox.py
-
-# Test full pipeline
-python test_agent.py
-
-# Test audio generation
-python test_audio.py
+├── scripts/                    # Utility and demo scripts
+├── diagrams/                   # Architecture diagrams (Mermaid + PNG)
+├── showcase/                   # Project showcase assets
+├── failure_log_viewer.py       # Streamlit failure log viewer
+├── export_diagrams.js          # Mermaid diagram → PNG exporter
+└── outputs/                    # Generated videos and failure logs
 ```
 
 ## 🛠️ Technology Stack
@@ -177,6 +206,8 @@ MIT License - feel free to use for educational purposes!
 **gTTS fallback not used**: Ensure `TTS_FALLBACK_PROVIDER=gtts`
 
 **No video generated**: Check Docker logs with `docker logs <container_id>`
+
+**Failure logs**: Check `outputs/failure_logs/` or run `streamlit run failure_log_viewer.py` for analysis
 
 ## 📧 Support
 
