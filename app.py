@@ -1,6 +1,8 @@
 import streamlit as st
 import os
 import json
+import shutil
+from datetime import datetime
 from agent.orchestrator import build_plan, run_agent_with_plan, apply_user_changes
 from agent.planner import normalize_plan
 from agent.feedback import save_good_example, get_feedback_stats
@@ -26,6 +28,11 @@ st.markdown("""
         color: #0F0F1A; font-weight: 700; border: none;
         border-radius: 10px; width: 100%;
     }
+    .stButton > button:disabled {
+        background: #333 !important;
+        color: #777 !important;
+        cursor: not-allowed;
+    }
     .plan-box {
         background: #1A1A2E; border: 1px solid #4FACFE;
         border-radius: 10px; padding: 1rem; margin: 0.5rem 0;
@@ -38,18 +45,48 @@ st.markdown("""
 st.markdown('<p class="main-title">🎬 AnimAI Studio</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">AI-powered educational animations for every teacher</p>', unsafe_allow_html=True)
 
-if "draft_plan" not in st.session_state:
-    st.session_state["draft_plan"] = None
-if "approved_plan" not in st.session_state:
-    st.session_state["approved_plan"] = None
-if "plan_prompt" not in st.session_state:
-    st.session_state["plan_prompt"] = ""
-if "last_result" not in st.session_state:
-    st.session_state["last_result"] = None
-if "last_query" not in st.session_state:
-    st.session_state["last_query"] = ""
-if "last_plan" not in st.session_state:
-    st.session_state["last_plan"] = None
+# ── Session State Defaults ────────────────────────────────────────────────────
+_defaults = {
+    "draft_plan": None,
+    "approved_plan": None,
+    "plan_prompt": "",
+    "last_result": None,
+    "last_query": "",
+    "last_plan": None,
+    "generating": False,       # Lock flag — prevents double-clicks during LLM work
+    "video_saved": False,      # Track if the current video was saved
+}
+for key, val in _defaults.items():
+    if key not in st.session_state:
+        st.session_state[key] = val
+
+# Callback: lock the UI BEFORE the script re-runs (prevents double clicks)
+def _lock_ui():
+    st.session_state["generating"] = True
+
+# Helper: check if the pipeline is currently busy
+is_busy = st.session_state["generating"]
+
+# Helper: reset everything and go back to the start
+def reset_all():
+    """Clear all session state so the user starts fresh."""
+    for key, val in _defaults.items():
+        st.session_state[key] = val
+    st.session_state.pop("prompt", None)
+
+# Helper: save video file to saved_videos/
+SAVED_VIDEOS_DIR = "saved_videos"
+
+def save_video_file(video_path: str, query: str) -> str:
+    """Copy the rendered video to saved_videos/ with a timestamped name. Returns the saved path."""
+    os.makedirs(SAVED_VIDEOS_DIR, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Sanitise the query into a short filename-safe slug
+    slug = "".join(c if c.isalnum() or c in (" ", "-") else "" for c in query)[:40].strip().replace(" ", "_")
+    dest_name = f"{timestamp}_{slug}.mp4"
+    dest_path = os.path.join(SAVED_VIDEOS_DIR, dest_name)
+    shutil.copy2(video_path, dest_path)
+    return dest_path
 
 # Show feedback stats if any
 stats = get_feedback_stats()
@@ -72,7 +109,7 @@ cols = st.columns(len(examples))
 for i, example in enumerate(examples):
     with cols[i]:
         short = example[:15] + "..."
-        if st.button(short, key=f"ex_{i}", help=example):
+        if st.button(short, key=f"ex_{i}", help=example, disabled=is_busy):
             st.session_state["prompt"] = example
 
 # ── Input ─────────────────────────────────────────────────────────────────────
@@ -82,12 +119,13 @@ prompt = st.text_area(
     placeholder="e.g. Explain how binary search works on a sorted array of 8 elements...",
     height=120,
     value=st.session_state.get("prompt", ""),
-    key="prompt_input"
+    key="prompt_input",
+    disabled=is_busy,
 )
 
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    plan_btn = st.button("🧠 Generate Plan", disabled=not prompt)
+    plan_btn = st.button("🧠 Generate Plan", disabled=(not prompt or is_busy), on_click=_lock_ui)
 
 # Reset stale plans when prompt changes
 if prompt and st.session_state.get("plan_prompt") and prompt != st.session_state.get("plan_prompt"):
@@ -95,11 +133,14 @@ if prompt and st.session_state.get("plan_prompt") and prompt != st.session_state
     st.session_state["approved_plan"] = None
 
 if plan_btn and prompt:
-    with st.spinner("🧑‍🏫 Teacher is explaining the concept, then building your animation plan..."):
+    st.session_state["video_saved"] = False
+    with st.spinner("🧑🏫 Teacher is explaining the concept, then building your animation plan..."):
         draft_plan = build_plan(prompt)
     st.session_state["draft_plan"] = draft_plan
     st.session_state["approved_plan"] = None
     st.session_state["plan_prompt"] = prompt
+    st.session_state["generating"] = False
+    st.rerun()
 
 # ── Plan Approval ────────────────────────────────────────────────────────────
 if st.session_state.get("draft_plan"):
@@ -111,7 +152,7 @@ if st.session_state.get("draft_plan"):
     # Show Teacher Explanation if available
     teacher_exp = draft_plan.get("teacher_explanation", {})
     if teacher_exp:
-        with st.expander("🧑‍🏫 Teacher's Concept Explanation", expanded=True):
+        with st.expander("🧑🏫 Teacher's Concept Explanation", expanded=True):
             st.markdown(f"**Core Idea:** {teacher_exp.get('core_idea', '')}")
             key_terms = teacher_exp.get("key_terms", [])
             if key_terms:
@@ -157,20 +198,22 @@ if st.session_state.get("draft_plan"):
         "Editable Plan JSON",
         value=json.dumps(draft_plan, indent=2),
         height=320,
-        key="editable_plan_json"
+        key="editable_plan_json",
+        disabled=is_busy,
     )
 
     c1, c2 = st.columns(2)
     with c1:
-        approve_btn = st.button("✅ Use This Plan", use_container_width=True)
+        approve_btn = st.button("✅ Use This Plan", use_container_width=True, disabled=is_busy)
     with c2:
-        regen_plan_btn = st.button("🔄 Regenerate Plan", use_container_width=True)
+        regen_plan_btn = st.button("🔄 Regenerate Plan", use_container_width=True, disabled=is_busy, on_click=_lock_ui)
 
     if regen_plan_btn and prompt:
         with st.spinner("Regenerating plan from prompt..."):
             refreshed = build_plan(prompt)
         st.session_state["draft_plan"] = refreshed
         st.session_state["approved_plan"] = None
+        st.session_state["generating"] = False
         st.rerun()
 
     if approve_btn:
@@ -184,12 +227,14 @@ if st.session_state.get("draft_plan"):
 
 if st.session_state.get("approved_plan"):
     st.markdown("### 🚀 Generate final video")
-    generate_btn = st.button("🎬 Generate Video With Voice", use_container_width=True)
+    generate_btn = st.button("🎬 Generate Video With Voice", use_container_width=True, disabled=is_busy, on_click=_lock_ui)
 else:
     generate_btn = False
 
 # ── Generation ────────────────────────────────────────────────────────────────
 if generate_btn and prompt:
+    st.session_state["video_saved"] = False
+
     st.divider()
     st.markdown("### ⚙️ Generating your animation...")
 
@@ -229,35 +274,34 @@ if generate_btn and prompt:
         st.divider()
 
         if result["status"] == "success":
-
-            # Show plan that was used
-            plan = result.get("plan", {})
-            if plan:
-                with st.expander("🧠 Animation Plan (what AI decided to create)"):
-                    st.markdown(f'<div class="plan-box">', unsafe_allow_html=True)
-                    st.markdown(f"**Title:** {plan.get('title', '')}")
-                    st.markdown(f"**Visual Style:** {plan.get('visual_style', '')}")
-                    st.markdown(f"**Planned Duration:** {plan.get('duration_seconds', 45)}s")
-                    st.markdown(f"**Opening Scene:** {plan.get('opening_scene', '')}")
-                    st.markdown("**Steps:**")
-                    for i, step in enumerate(plan.get("steps", []), 1):
-                        st.markdown(f"&nbsp;&nbsp;{i}. {step}")
-
-                    full_script = plan.get("full_script", [])
-                    if full_script:
-                        st.markdown("**Full Script:**")
-                        for i, beat in enumerate(full_script, 1):
-                            st.markdown(f"&nbsp;&nbsp;{i}. {beat}")
-
-                    st.markdown(f"**Closing Scene:** {plan.get('closing_scene', '')}")
-                    st.markdown(f'</div>', unsafe_allow_html=True)
-
-            # Video player
             video_path = result["video_path"]
             if os.path.exists(video_path):
                 with open(video_path, "rb") as f:
                     video_bytes = f.read()
 
+                # Show plan that was used
+                plan = result.get("plan", {})
+                if plan:
+                    with st.expander("🧠 Animation Plan (what AI decided to create)"):
+                        st.markdown(f'<div class="plan-box">', unsafe_allow_html=True)
+                        st.markdown(f"**Title:** {plan.get('title', '')}")
+                        st.markdown(f"**Visual Style:** {plan.get('visual_style', '')}")
+                        st.markdown(f"**Planned Duration:** {plan.get('duration_seconds', 45)}s")
+                        st.markdown(f"**Opening Scene:** {plan.get('opening_scene', '')}")
+                        st.markdown("**Steps:**")
+                        for i, step in enumerate(plan.get("steps", []), 1):
+                            st.markdown(f"&nbsp;&nbsp;{i}. {step}")
+
+                        full_script = plan.get("full_script", [])
+                        if full_script:
+                            st.markdown("**Full Script:**")
+                            for i, beat in enumerate(full_script, 1):
+                                st.markdown(f"&nbsp;&nbsp;{i}. {beat}")
+
+                        st.markdown(f"**Closing Scene:** {plan.get('closing_scene', '')}")
+                        st.markdown(f'</div>', unsafe_allow_html=True)
+
+                # Video player
                 st.success("✅ Your animation is ready!")
                 st.video(video_bytes)
 
@@ -269,16 +313,11 @@ if generate_btn and prompt:
                                        use_container_width=True)
                 with col2:
                     if st.button("🔄 Regenerate", use_container_width=True):
+                        st.session_state["generating"] = False
                         st.rerun()
                 with col3:
                     if st.button("🆕 New Animation", use_container_width=True):
-                        st.session_state["prompt"] = ""
-                        st.session_state["draft_plan"] = None
-                        st.session_state["approved_plan"] = None
-                        st.session_state["plan_prompt"] = ""
-                        st.session_state["last_result"] = None
-                        st.session_state["last_query"] = ""
-                        st.session_state["last_plan"] = None
+                        reset_all()
                         st.rerun()
 
                 # Feedback section
@@ -289,13 +328,17 @@ if generate_btn and prompt:
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("👍 Yes, this is great!", use_container_width=True):
+                        # Save as a learning example
                         save_good_example(
                             query=prompt,
                             code=result.get("code", ""),
                             category=result.get("category", "diagram"),
                             plan=result.get("plan")
                         )
-                        st.success("🎉 Thank you! This animation has been saved to improve future generations.")
+                        # Also save the video file permanently
+                        saved_path = save_video_file(video_path, prompt)
+                        st.session_state["video_saved"] = True
+                        st.success(f"🎉 Thank you! Animation saved to **{saved_path}** and added to the learning database.")
 
                 with col2:
                     if st.button("👎 No, needs improvement", use_container_width=True):
@@ -321,17 +364,36 @@ if generate_btn and prompt:
                             for i, line in enumerate(voiceover_lines, 1):
                                 st.write(f"**{i}.** {line}")
 
+            else:
+                # Video file doesn't exist even though status was "success"
+                st.error("❌ Video file was not found on disk.")
+                st.info("The generation pipeline reported success but the video file is missing.")
+                if st.button("🔙 Start Over", use_container_width=True, key="start_over_missing"):
+                    reset_all()
+                    st.rerun()
+
         else:
+            # Generation failed
             st.error("❌ Could not generate animation after multiple attempts.")
             st.info("💡 Try rephrasing your prompt with more specific details.")
             with st.expander("🔍 Error Details"):
                 st.code(result.get("error", "Unknown error")[:500])
+            if st.button("🔙 Start Over", use_container_width=True, key="start_over_fail"):
+                reset_all()
+                st.rerun()
 
     except Exception as e:
         st.error(f"❌ Error: {str(e)}")
         import traceback
         with st.expander("Details"):
             st.code(traceback.format_exc())
+        if st.button("🔙 Start Over", use_container_width=True, key="start_over_exception"):
+            reset_all()
+            st.rerun()
+
+    finally:
+        # Always unlock the UI when generation finishes (success or failure)
+        st.session_state["generating"] = False
 
 # ── Post-Generation Revision Loop ─────────────────────────────────────────────
 last_result = st.session_state.get("last_result") or {}
@@ -345,12 +407,14 @@ if last_result.get("status") == "success":
         placeholder="e.g. Make the full binary tree visible, reduce label overlap, and slow down traversal narration.",
         height=110,
         key="change_request_input",
+        disabled=is_busy,
     )
 
     apply_changes_btn = st.button(
         "♻️ Apply Changes (max 3 tries)",
         use_container_width=True,
-        disabled=not change_request.strip(),
+        disabled=(not change_request.strip() or is_busy),
+        on_click=_lock_ui,
     )
 
     if apply_changes_btn:
@@ -361,10 +425,12 @@ if last_result.get("status") == "success":
                 existing_code=last_result.get("code", ""),
                 change_request=change_request.strip(),
             )
+        st.session_state["generating"] = False
 
         if revised.get("status") == "success":
             st.session_state["last_result"] = revised
             st.session_state["last_plan"] = revised.get("plan") or st.session_state.get("last_plan")
+            st.session_state["video_saved"] = False
             st.success("✅ Changes applied successfully. Updated video is ready below.")
 
             revised_path = revised.get("video_path", "")

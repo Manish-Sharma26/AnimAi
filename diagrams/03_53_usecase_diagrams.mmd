@@ -1,0 +1,41 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "20px",
+    "fontFamily": "Arial, sans-serif",
+    "primaryColor": "#dbeafe",
+    "primaryTextColor": "#1e3a5f",
+    "primaryBorderColor": "#3b82f6",
+    "lineColor": "#475569",
+    "secondaryColor": "#dcfce7",
+    "tertiaryColor": "#fef9c3"
+  }
+}}%%
+flowchart LR
+    USER(["👤 User"])
+
+    subgraph SYS[" AnimAI Studio "]
+        direction TB
+        UC1(["Enter Topic / Question"])
+        UC2(["Review & Approve Plan"])
+        UC3(["View Generated Video"])
+        UC4(["Provide Feedback"])
+        UC5(["Request Revisions"])
+        UC6(["Download Video"])
+    end
+
+    USER --- UC1
+    USER --- UC2
+    USER --- UC3
+    USER --- UC4
+    USER --- UC5
+    USER --- UC6
+
+    style SYS fill:#f8fafc,stroke:#334155,color:#0f172a
+    style USER fill:#3b82f6,color:#fff,stroke:#1d4ed8
+    style UC1 fill:#dbeafe,stroke:#93c5fd,color:#1e3a5f
+    style UC2 fill:#dbeafe,stroke:#93c5fd,color:#1e3a5f
+    style UC3 fill:#dbeafe,stroke:#93c5fd,color:#1e3a5f
+    style UC4 fill:#dbeafe,stroke:#93c5fd,color:#1e3a5f
+    style UC5 fill:#dbeafe,stroke:#93c5fd,color:#1e3a5f
+    style UC6 fill:#dbeafe,stroke:#93c5fd,color:#1e3a5f

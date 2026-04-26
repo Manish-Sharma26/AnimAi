@@ -1,7 +1,8 @@
 import os
+import re
 
 from agent.llm import call_llm
-from agent.coder import extract_code
+from agent.coder import extract_code, _strip_kwarg, _COLOR_MAP
 from rag.retriever import retrieve as rag_retrieve
 
 DEBUGGER_MODEL = os.getenv("GEMINI_DEBUGGER_MODEL", "gemini-2.5-flash")
@@ -24,7 +25,7 @@ ERROR:
 6. Return the complete, fixed file from `from manim import *` to the end of `construct()`.
 7. Ensure all parentheses, brackets, and string quotes are balanced.
 8. The fixed code must pass `compile(code, 'scene.py', 'exec')` check.
-9. If the code uses `VoiceoverScene` and `GTTSService`, preserve those imports and `self.set_speech_service(...)` setup.
+9. If the code uses `VoiceoverScene` with AzureService/GTTSService, preserve speech-service imports and `self.set_speech_service(...)` setup.
 10. For Manim positioning APIs, use callable getters like `get_center()`, `get_top()`, `get_bottom()` when passing points to `move_to`, `next_to`, or vector math.
 
 LAYOUT AWARENESS RULES:
@@ -40,7 +41,7 @@ LAYOUT AWARENESS RULES:
 SANDBOX CONSTRAINT RULES — CRITICAL:
 14. The code runs inside Docker with ONLY scene.py mounted. NO external files (images, SVGs, assets) exist.
 15. If the error involves a missing file (e.g., FileNotFoundError for .png, .svg, .jpg), REPLACE the ImageMobject/SVGMobject with programmatic Manim shapes (Rectangle, Circle, Triangle, Polygon, etc.).
-16. NEVER add `import os` or any filesystem operations — they are not needed and will cause errors.
+16. `import os` is allowed only for reading TTS environment variables; never add filesystem operations.
 17. NEVER use `.to_center()` — it does not exist in Manim. Use `.move_to(ORIGIN)` instead.
 
 Common code fixes:
@@ -51,8 +52,66 @@ Common code fixes:
 - `.center` used as property → change to `.get_center()`
 - `.get_top` / `.get_bottom` used without `()` → add `()`
 - `ImageMobject("file.png")` → replace with shapes (e.g., Rectangle + Circle)
-- `import os` → remove entirely
 - `.to_center()` → `.move_to(ORIGIN)`
+- `axes.get_graph(lambda ...)` → `axes.plot(lambda ...)` (get_graph is deprecated in Manim 0.18+)
+- `axes.get_vertical_line_to_graph(...)` → `axes.get_vertical_line(...)` (deprecated)
+- `getter() takes 1 positional argument but 2 were given` → deprecated method; replace with modern equivalent
+- `Word boundaries are required for timing with bookmarks` → GTTSService does NOT support bookmarks.
+  Remove ALL `<bookmark mark='...'/>` tags and ALL `self.wait_until_bookmark(...)` calls.
+- `'GeneratedScene' object has no attribute 'set_camera_orientation'` → VoiceoverScene DOES NOT
+  inherit from ThreeDScene. Remove ALL `self.set_camera_orientation(...)` calls. Replace any
+  `ThreeDAxes` with `Axes`. Replace `Surface(...)` and `Sphere(...)` with 2D equivalents.
+- `Text() got unexpected keyword argument 'alignment'` → Remove `alignment=` from Text() calls.
+  Use `VGroup(...).arrange(DOWN, aligned_edge=LEFT)` for alignment.
+- `Text() got unexpected keyword argument 'max_width'` → Remove `max_width=` from Text() calls.
+  Use `.scale_to_fit_width(X)` after creation instead.
+- `_get_axis_label() got an unexpected keyword argument 'color'` → `get_x_axis_label()` and
+  `get_y_axis_label()` do NOT accept `color=`, `font_size=`, or `weight=`. Move those kwargs
+  inside the `Tex()`/`Text()` object: `axes.get_x_axis_label(Tex(r"$x$", color=WHITE), edge=DOWN)`.
+- `Rectangle() got unexpected keyword argument 'corner_radius'` → `Rectangle` does NOT accept
+  `corner_radius`. Use `RoundedRectangle(corner_radius=X, width=W, height=H)` instead.
+  Replace every `Rectangle(..., corner_radius=X)` → `RoundedRectangle(corner_radius=X, ...)`.
+- `wait() has a duration of ... <= 0 seconds` → Too many `run_time=tracker.duration * N` calls
+  inside a single voiceover block exceeded `tracker.duration` total. Fix: replace
+  `self.wait(tracker.get_remaining_duration())` → `self.wait(max(0.05, tracker.get_remaining_duration()))`
+  AND replace `run_time=tracker.get_remaining_duration()` → `run_time=max(0.05, tracker.get_remaining_duration())`.
+  Also check: the sum of all `run_time=tracker.duration * X` must be < 1.0 (i.e., total fraction < 1).
+  Reduce individual fractions so they sum to at most 0.85.
+- `Mobject.__getattr__.<locals>.getter() takes 1 positional argument but 2 were given` →
+  This is caused by calling `.get_part_by_text("some string")` on a `Paragraph` or `Text`.
+  These getter methods do NOT accept string arguments in this Manim version.
+  REMOVE all `obj.get_part_by_text("...")` calls and replace with `Indicate(obj, ...)` on the
+  whole object, or break the Paragraph into separate Text() objects (one per line) and
+  Indicate the specific Text object directly.
+- LAYOUT: Never use `Rectangle()` as invisible layout guides named `main_visual_area` or
+  `key_text_panel`. They pollute `self.mobjects` and cause ghost elements between segments.
+  Replace with coordinate constants: `MAIN_X = -3.2`, `KEY_X = 4.6`, `KEY_TOP = 1.8`.
+  Position objects with explicit coords: `key1.move_to([KEY_X, KEY_TOP, 0])`.
+- OVERLAP: Two-column layout (Seg 2/3) MUST have each column width ≤ `config.frame_width * 0.44`.
+  Using `0.5` causes the columns to overlap in the centre. Always call
+  `col.scale_to_fit_width(config.frame_width * 0.44)` on both left and right columns.
+- Paragraph(width=...) is NOT a layout constraint in Manim v0.20.1 — text will overflow.
+  Replace Paragraph with VGroup of separate Text() lines + call `.scale_to_fit_width(X)`.
+- `NameError: name 'ORANGE_E' is not defined` (or ORANGE_A/B/C/D, PINK_A-E, WHITE_A-E, BLACK_A-E) →
+  ORANGE, PINK, WHITE, and BLACK do NOT have _A through _E suffix variants in Manim.
+  Replace with the base name: `ORANGE_E` → `ORANGE`, `PINK_C` → `PINK`, etc.
+  Or use a hex string: `ORANGE_E` → `"#FF8C00"`.
+- `NameError: name 'SurroundingRoundedRectangle' is not defined` →
+  `SurroundingRoundedRectangle` DOES NOT EXIST in Manim. Replace with:
+  `SurroundingRectangle(mobject, corner_radius=0.1, color=YELLOW)`
+- `TypeError: Mobject.__init__() got an unexpected keyword argument 'opacity'` →
+  Line, Arrow, Circle and other geometry constructors do NOT accept bare `opacity=`.
+  Replace `opacity=X` with `stroke_opacity=X` for stroke objects (Line, Arrow, DashedLine)
+  or `fill_opacity=X` for fill objects (Circle, Rectangle, RoundedRectangle).
+  NOTE: `.set_fill(opacity=X)` and `.set_stroke(opacity=X)` ARE valid — only constructors reject it.
+- `Text.set_text("new text")` → Text objects are IMMUTABLE. Create a new Text() and
+  use `Transform(old, new)` to animate the change.
+- HORIZONTAL OVERFLOW: If elements go off-screen to the right (x > 6.5), the code is
+  chaining `.next_to(RIGHT)` without bounds. Fix: put ALL pipeline elements into a
+  VGroup, use `.arrange(RIGHT, buff=0.4)`, then `.scale_to_fit_width(config.frame_width - 2.0)`.
+- VOICEOVER LOOP TIMING: If a `for` loop inside a voiceover block uses
+  `tracker.duration * X` per iteration, total = N*X which easily exceeds 1.0.
+  Fix: pre-divide `per_step = tracker.duration * X / N`.
 
 RELEVANT MANIM API REFERENCE (use to verify correct API usage):
 {manim_context}
@@ -61,68 +120,169 @@ Return ONLY the complete, syntactically valid Python code. No commentary.
 """
 
 
+
 def _apply_common_manim_runtime_fixes(code: str, error: str) -> str:
     """Apply deterministic fixes for frequent Manim runtime mistakes."""
-    import re as _re
     fixed = code
     err = (error or "").lower()
 
     # Common LLM mistake: `obj.center` used as a point instead of `obj.get_center()`.
     if "unsupported operand type(s) for -: 'method' and 'float'" in err or "has no attribute 'center'" in err:
-        fixed = _re.sub(r'\.center\b(?!\()', '.get_center()', fixed)
+        fixed = re.sub(r'\.center\b(?!\()', '.get_center()', fixed)
 
     # Common: using get_top/get_bottom as properties instead of methods
     if "'method'" in err:
-        fixed = _re.sub(r'\.get_top\b(?!\()', '.get_top()', fixed)
-        fixed = _re.sub(r'\.get_bottom\b(?!\()', '.get_bottom()', fixed)
-        fixed = _re.sub(r'\.get_left\b(?!\()', '.get_left()', fixed)
-        fixed = _re.sub(r'\.get_right\b(?!\()', '.get_right()', fixed)
+        fixed = re.sub(r'\.get_top\b(?!\()', '.get_top()', fixed)
+        fixed = re.sub(r'\.get_bottom\b(?!\()', '.get_bottom()', fixed)
+        fixed = re.sub(r'\.get_left\b(?!\()', '.get_left()', fixed)
+        fixed = re.sub(r'\.get_right\b(?!\()', '.get_right()', fixed)
 
     # Common: .to_center() does not exist in Manim, use .move_to(ORIGIN)
     if "has no attribute 'to_center'" in err:
-        fixed = _re.sub(r'\.to_center\(\)', '.move_to(ORIGIN)', fixed)
+        fixed = re.sub(r'\.to_center\(\)', '.move_to(ORIGIN)', fixed)
 
-    # Common: remove import os if it causes NameError
-    if "name 'os' is not defined" in err:
-        fixed = _re.sub(r'^\s*import\s+os\s*\n', '', fixed, flags=_re.MULTILINE)
-        fixed = _re.sub(r'^\s*from\s+os\b[^\n]*\n', '', fixed, flags=_re.MULTILINE)
+    # Common: SurroundingRoundedRectangle does NOT exist in Manim — use SurroundingRectangle
+    if 'surroundingroundedrectangle' in err or 'SurroundingRoundedRectangle' in fixed:
+        fixed = re.sub(r'\bSurroundingRoundedRectangle\b', 'SurroundingRectangle', fixed)
+
+    # Common: bare opacity= in geometry constructors (Line, Arrow, Circle, etc.)
+    # These do NOT accept opacity= — use stroke_opacity= or fill_opacity= instead.
+    if "unexpected keyword argument 'opacity'" in err or (
+        re.search(r'(?:Line|Arrow|DashedLine|Circle|Dot|Rectangle|RoundedRectangle|Arc)\(', fixed)
+        and ', opacity=' in fixed
+    ):
+        _stroke_geom = ('Line(', 'Arrow(', 'DashedLine(', 'Arc(', 'CurvedArrow(', 'DoubleArrow(')
+        _fill_geom = ('Circle(', 'Dot(', 'Square(', 'Polygon(', 'Rectangle(', 'RoundedRectangle(')
+        def _fix_opacity(line):
+            if 'stroke_opacity' in line or 'fill_opacity' in line:
+                return line
+            if '.set_fill(' in line or '.set_stroke(' in line:
+                return line
+            for g in _stroke_geom:
+                if g in line and re.search(r'\bopacity\s*=', line):
+                    return re.sub(r'\bopacity\s*=', 'stroke_opacity=', line)
+            for g in _fill_geom:
+                if g in line and re.search(r'\bopacity\s*=', line):
+                    return re.sub(r'\bopacity\s*=', 'fill_opacity=', line)
+            return line
+        fixed = '\n'.join(_fix_opacity(ln) for ln in fixed.split('\n'))
+
+    # Common: Axes.get_graph() deprecated in Manim 0.18+ → use Axes.plot()
+    if "getter() takes 1 positional argument but 2 were given" in err or "get_graph" in err:
+        fixed = re.sub(r'\.get_graph\(', '.plot(', fixed)
+
+    # Common: Axes.get_vertical_line_to_graph() deprecated → use Axes.get_vertical_line()
+    if "get_vertical_line_to_graph" in err:
+        fixed = re.sub(r'\.get_vertical_line_to_graph\(', '.get_vertical_line(', fixed)
+
+    # ── CRITICAL: Strip voiceover bookmarks (always applied) ──
+    # GTTSService does NOT support transcription-based word boundaries.
+    # <bookmark .../> tags + wait_until_bookmark() calls always crash.
+    fixed = re.sub(r'<bookmark\s+mark=[\'"][^\'"]*[\'"]\s*/>', '', fixed)
+    fixed = re.sub(r'\bself\.wait_until_bookmark\s*\([^)]*\)\s*\n?', '', fixed)
+
+    # ── CRITICAL: Strip hallucinated Text() parameters (always applied) ──
+    for bad_kw in ("alignment", "max_width", "justify"):
+        fixed = _strip_kwarg(fixed, bad_kw)
+
+    # ── CRITICAL: Strip 3D scene methods incompatible with VoiceoverScene ──
+    # set_camera_orientation() only exists on ThreeDScene, NOT VoiceoverScene.
+    if "set_camera_orientation" in err or "set_camera_orientation" in fixed:
+        fixed = re.sub(
+            r'\bself\.set_camera_orientation\s*\([^)]*\)\s*\n?',
+            '# [REMOVED: set_camera_orientation not available on VoiceoverScene]\n',
+            fixed
+        )
+        fixed = re.sub(r'\bThreeDAxes\b', 'Axes', fixed)
+
+    # ── CRITICAL: Strip invalid kwargs from get_x/y_axis_label() calls only ──
+    # These methods do NOT accept color=, font_size=, weight=, stroke_width=.
+    if 'get_axis_label' in err or ('get_x_axis_label' in fixed) or ('get_y_axis_label' in fixed):
+        def _fix_axis_label_line(line):
+            if 'get_x_axis_label' in line or 'get_y_axis_label' in line or 'get_axis_labels' in line:
+                for bad_kw in ('color', 'font_size', 'weight', 'stroke_width'):
+                    line = re.sub(r',\s*' + bad_kw + r'\s*=[^,)]+', '', line)
+            return line
+        fixed = '\n'.join(_fix_axis_label_line(ln) for ln in fixed.split('\n'))
+
+    # ── CRITICAL: Convert Rectangle(corner_radius=X) to RoundedRectangle(corner_radius=X) ──
+    # Rectangle does NOT accept corner_radius — only RoundedRectangle does.
+    if "corner_radius" in err or ("corner_radius" in fixed and "Rectangle(" in fixed):
+        def _fix_corner_radius_line(line):
+            if 'corner_radius' in line and 'Rectangle(' in line and 'RoundedRectangle' not in line:
+                line = line.replace('Rectangle(', 'RoundedRectangle(')
+            return line
+        fixed = '\n'.join(_fix_corner_radius_line(ln) for ln in fixed.split('\n'))
+
+    # ── CRITICAL: Guard tracker.get_remaining_duration() against zero/negative values ──
+    # When too many run_time=tracker.duration*N fractions are used inside one voiceover block,
+    # get_remaining_duration() can return 0 or negative, crashing self.wait().
+    if "<= 0 seconds" in err or "get_remaining_duration" in fixed:
+        fixed = re.sub(
+            r'self\.wait\(tracker\.get_remaining_duration\(\)\)',
+            'self.wait(max(0.05, tracker.get_remaining_duration()))',
+            fixed
+        )
+        fixed = re.sub(
+            r'run_time\s*=\s*tracker\.get_remaining_duration\(\)',
+            'run_time=max(0.05, tracker.get_remaining_duration())',
+            fixed
+        )
+
+    # ── CRITICAL: Remove get_part_by_text() calls (method doesn't accept string args) ──
+    if "getter() takes 1 positional argument" in err or "get_part_by_text" in fixed:
+        fixed = re.sub(
+            r'(\w+)\.get_part_by_text\([^)]+\)',
+            r'\1',
+            fixed
+        )
+
+    # ── Suppress deprecated set_width() on Paragraph/Text ──
+    if ".set_width(" in fixed:
+        fixed = re.sub(
+            r'(Paragraph\([^)]+\))\.set_width\(([^)]+)\)',
+            r'\1',
+            fixed
+        )
+
+    # ── Strip Paragraph(... width=X ...) — not a layout constraint in Manim v0.20.1 ──
+    if 'Paragraph(' in fixed and 'width=' in fixed:
+        fixed = re.sub(
+            r'(Paragraph\([^)]*),\s*width\s*=\s*[^,)]+([^)]*\))',
+            r'\1\2',
+            fixed
+        )
+
+    # ── Replace self.wait(tracker.duration) static pauses in voiceover blocks ──
+    if 'self.wait(tracker.duration)' in fixed:
+        fixed = re.sub(
+            r'\bself\.wait\(tracker\.duration\)',
+            'self.wait(max(0.05, tracker.get_remaining_duration()))  # was: static wait',
+            fixed
+        )
+
+    # If the error specifically mentions unexpected keyword argument, strip it
+    kw_match = re.search(r"unexpected keyword argument '(\w+)'", err)
+    if kw_match:
+        kw = kw_match.group(1)
+        if kw not in ('color', 'font_size', 'weight', 'stroke_width', 'corner_radius'):
+            fixed = _strip_kwarg(fixed, kw)
 
     # Common: undefined color constants — replace with hex equivalents
-    _COLOR_MAP = {
-        "BROWN": '"#8B4513"',
-        "LIGHT_BROWN": '"#CD853F"',
-        "DARK_BROWN": '"#5C3317"',
-        "CYAN": '"#00FFFF"',
-        "DARK_GREEN": '"#006400"',
-        "LIGHT_GREEN": '"#90EE90"',
-        "DARK_RED": '"#8B0000"',
-        "LIGHT_BLUE": '"#ADD8E6"',
-        "DARK_GREY": '"#555555"',
-        "LIGHT_GREY": '"#AAAAAA"',
-        "MAGENTA": '"#FF00FF"',
-        "LIME": '"#00FF00"',
-        "NAVY": '"#000080"',
-        "OLIVE": '"#808000"',
-        "BEIGE": '"#F5F5DC"',
-        "TURQUOISE": '"#40E0D0"',
-        "VIOLET": '"#EE82EE"',
-        "INDIGO": '"#4B0082"',
-        "CORAL": '"#FF7F50"',
-        "SALMON": '"#FA8072"',
-        "TAN": '"#D2B48C"',
-        "KHAKI": '"#F0E68C"',
-        "AQUA": '"#00FFFF"',
-        "CRIMSON": '"#DC143C"',
-        "IVORY": '"#FFFFF0"',
-        "LAVENDER": '"#E6E6FA"',
-        "SILVER": '"#C0C0C0"',
-        "SKYBLUE": '"#87CEEB"',
-    }
     if "is not defined" in err:
         for color_name, hex_val in _COLOR_MAP.items():
             if color_name.lower() in err:
-                # Replace bare color name used as a constant with hex string
-                fixed = _re.sub(r'\b' + color_name + r'\b', hex_val, fixed)
+                fixed = re.sub(r'\b' + color_name + r'\b', hex_val, fixed)
+
+    # GTTSService does NOT support the prosody= kwarg — strip it from every voiceover call.
+    # This error manifests as: TypeError: gTTS.__init__() got an unexpected keyword argument 'prosody'
+    if "'prosody'" in err or ("unexpected keyword argument" in err and "prosody" in err):
+        fixed = re.sub(
+            r',\s*prosody\s*=\s*\{\{[^}]*\}\}|,\s*prosody\s*=\s*\{[^}]*\}',
+            '',
+            fixed,
+        )
+        print("[Debugger] Stripped prosody= kwargs (GTTSService does not support prosody)")
 
     return fixed
 

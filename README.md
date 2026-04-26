@@ -17,7 +17,8 @@ AI-powered educational animation generator that creates professional Manim anima
 - Python 3.9 or higher
 - Docker Desktop installed and running
 - FFmpeg installed
-- Anthropic API key ([get one at Anthropic](https://console.anthropic.com))
+- Gemini API key
+- Azure Speech resource (Azure for Students supported)
 
 ## 🚀 Setup
 
@@ -47,7 +48,17 @@ AI-powered educational animation generator that creates professional Manim anima
    
    Create a `.env` file in the root directory:
    ```env
-   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   GEMINI_API_KEY=your_gemini_api_key_here
+
+   # TTS provider selection
+   TTS_PROVIDER=azure
+   TTS_FALLBACK_PROVIDER=gtts
+
+   # Azure Speech (required when TTS_PROVIDER=azure)
+   AZURE_SUBSCRIPTION_KEY=your_azure_speech_key
+   AZURE_SERVICE_REGION=centralindia
+   AZURE_TTS_VOICE=en-IN-NeerjaNeural
+   AZURE_TTS_STYLE=general
    ```
 
 5. **Build Docker image**
@@ -120,11 +131,11 @@ python test_audio.py
 ## 🛠️ Technology Stack
 
 - **Frontend**: Streamlit
-- **LLM**: Anthropic Claude (claude-3-5-sonnet)
+- **LLM**: Google Gemini
 - **Animation**: Manim Community Edition
 - **Execution**: Docker
 - **RAG**: FAISS + Sentence Transformers
-- **Voiceover**: manim-voiceover + Google Text-to-Speech (gTTS)
+- **Voiceover**: manim-voiceover + Azure Speech (primary) + gTTS (fallback)
 - **Video Processing**: FFmpeg
 
 ## 🎨 Visual Styles
@@ -150,7 +161,7 @@ MIT License - feel free to use for educational purposes!
 ## ⚠️ Security Note
 
 - Never commit your `.env` file
-- Keep your Anthropic API key private
+- Keep your Gemini API key private
 - Regenerate your API key if accidentally exposed
 
 ## 🐛 Troubleshooting
@@ -159,7 +170,11 @@ MIT License - feel free to use for educational purposes!
 
 **FFmpeg not found**: Install FFmpeg and add to system PATH
 
-**Anthropic API error**: Verify your API key in `.env` file
+**Gemini API error**: Verify your API key in `.env` file
+
+**Azure auth error**: Check `AZURE_SUBSCRIPTION_KEY` and `AZURE_SERVICE_REGION`
+
+**gTTS fallback not used**: Ensure `TTS_FALLBACK_PROVIDER=gtts`
 
 **No video generated**: Check Docker logs with `docker logs <container_id>`
 

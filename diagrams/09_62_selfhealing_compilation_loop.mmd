@@ -1,0 +1,54 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "20px",
+    "fontFamily": "Arial, sans-serif",
+    "primaryColor": "#dbeafe",
+    "primaryTextColor": "#1e3a5f",
+    "primaryBorderColor": "#3b82f6",
+    "lineColor": "#475569",
+    "secondaryColor": "#dcfce7",
+    "tertiaryColor": "#fef9c3"
+  }
+}}%%
+flowchart TD
+    FAIL(["❌ Compilation Failed<br/>attempt N of 3"])
+    FAIL --> CLS
+
+    CLS["Classify Failure Type<br/>bookmark_error · invalid_text_param<br/>corner_radius_error · getter_takes_1_arg<br/>negative_wait_duration · axis_label_error<br/>timeout / no_video · other"]
+    CLS --> DEC1
+
+    DEC1{Known pattern?}
+    DEC1 -->|YES| FIX
+    DEC1 -->|NO| LLM
+
+    FIX["Apply Deterministic Fix<br/>zero LLM cost"]
+    LLM["Send to Debugger Agent LLM<br/>broken code + error + RAG context"]
+
+    FIX --> RC
+    LLM --> RC
+
+    RC["Re-compile in Docker Sandbox"]
+    RC --> DEC2
+
+    DEC2{Success?}
+    DEC2 -->|YES| OUT
+    DEC2 -->|NO| DEC3
+
+    OUT(["🎬 Return Video"])
+
+    DEC3{N < 3?}
+    DEC3 -->|YES| FAIL
+    DEC3 -->|NO| LOG
+
+    LOG(["📋 Log Failure<br/>Return Error"])
+
+    style FAIL fill:#f87171,color:#fff,stroke:#dc2626
+    style OUT fill:#22c55e,color:#fff,stroke:#16a34a
+    style LOG fill:#94a3b8,color:#fff,stroke:#64748b
+    style FIX fill:#34d399,color:#fff,stroke:#059669
+    style LLM fill:#a78bfa,color:#fff,stroke:#7c3aed
+    style RC fill:#94a3b8,color:#fff,stroke:#64748b
+    style DEC1 fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    style DEC2 fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    style DEC3 fill:#fef3c7,stroke:#f59e0b,color:#78350f

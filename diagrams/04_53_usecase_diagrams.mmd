@@ -1,0 +1,40 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "20px",
+    "fontFamily": "Arial, sans-serif",
+    "primaryColor": "#dbeafe",
+    "primaryTextColor": "#1e3a5f",
+    "primaryBorderColor": "#3b82f6",
+    "lineColor": "#475569",
+    "secondaryColor": "#dcfce7",
+    "tertiaryColor": "#fef9c3"
+  }
+}}%%
+flowchart LR
+    subgraph SYS[" AnimAI Studio "]
+        direction TB
+        UC_T(["Generate Curriculum (Teach)"])
+        UC_P(["Generate Plan (Plan)"])
+        UC_C(["Generate Code (Code)"])
+        UC_D(["Debug Code (Debug)"])
+        UC_R(["Retrieve API Patterns (RAG)"])
+        UC_S(["Compile in Docker Sandbox"])
+        UC_V(["Synthesize Voice (TTS)"])
+        UC_L(["Log Failures for Analysis"])
+        UC_F(["Store Feedback Examples"])
+    end
+
+    GEMINI["☁️ Gemini LLM API"] --- UC_T
+    GEMINI --- UC_P
+    GEMINI --- UC_C
+    GEMINI --- UC_D
+    FAISS["🗄️ FAISS Index"] --- UC_R
+    DOCKER["🐳 Docker Engine"] --- UC_S
+    TTS["🔊 Azure / gTTS"] --- UC_V
+
+    style SYS fill:#f8fafc,stroke:#334155,color:#0f172a
+    style GEMINI fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    style FAISS fill:#fef9c3,stroke:#eab308,color:#713f12
+    style DOCKER fill:#dcfce7,stroke:#22c55e,color:#14532d
+    style TTS fill:#fce7f3,stroke:#ec4899,color:#831843

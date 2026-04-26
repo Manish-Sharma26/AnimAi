@@ -1,0 +1,58 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "20px",
+    "fontFamily": "Arial, sans-serif",
+    "primaryColor": "#dbeafe",
+    "primaryTextColor": "#1e3a5f",
+    "primaryBorderColor": "#3b82f6",
+    "lineColor": "#475569",
+    "secondaryColor": "#dcfce7",
+    "tertiaryColor": "#fef9c3"
+  }
+}}%%
+flowchart TD
+    START(["🔍 User Query"]) --> IC
+
+    IC["Intent Classifier - intent.py<br/>bare_topic / detailed"]
+    IC --> TA
+
+    TA["Teacher Agent<br/>Curriculum + Analogy"]
+    TA --> PA
+
+    PA["Planner Agent<br/>5-Segment Storyboard"]
+    PA -->|Animation Plan JSON| CA
+
+    RAG["RAG Engine - FAISS"] --> CA
+    FB["Feedback Examples"] --> CA
+
+    CA["Coder Agent<br/>Manim Code Generation"]
+    CA --> DS
+
+    DS["Docker Sandbox<br/>manim render scene.py"]
+    DS --> DEC
+
+    DEC{Success?}
+    DEC -->|YES| OUT
+    DEC -->|NO| FC
+
+    OUT(["🎬 Output MP4 Video"])
+
+    FC["Failure Classifier"]
+    FC --> DBG
+
+    DBG["Debugger Agent<br/>Deterministic + LLM Fix"]
+    DBG -->|retry up to 3x| DS
+
+    style START fill:#3b82f6,color:#fff,stroke:#2563eb
+    style OUT fill:#22c55e,color:#fff,stroke:#16a34a
+    style IC fill:#a78bfa,color:#fff,stroke:#7c3aed
+    style TA fill:#34d399,color:#fff,stroke:#059669
+    style PA fill:#34d399,color:#fff,stroke:#059669
+    style CA fill:#f97316,color:#fff,stroke:#ea580c
+    style DS fill:#94a3b8,color:#fff,stroke:#64748b
+    style DBG fill:#f87171,color:#fff,stroke:#dc2626
+    style FC fill:#fbbf24,color:#fff,stroke:#d97706
+    style RAG fill:#e0f2fe,stroke:#38bdf8,color:#0c4a6e
+    style FB fill:#e0f2fe,stroke:#38bdf8,color:#0c4a6e
+    style DEC fill:#fef3c7,stroke:#f59e0b,color:#78350f

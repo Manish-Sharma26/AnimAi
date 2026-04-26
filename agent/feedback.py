@@ -24,7 +24,7 @@ def save_good_example(query: str, code: str, category: str, plan: dict = None):
         try:
             with open(FEEDBACK_FILE, "r") as f:
                 examples = json.load(f)
-        except:
+        except Exception:
             examples = []
 
     # Add new example
@@ -66,7 +66,7 @@ def get_learned_examples(category: str, k: int = 2) -> list:
     try:
         with open(FEEDBACK_FILE, "r") as f:
             examples = json.load(f)
-    except:
+    except Exception:
         return []
 
     # Filter by category and sort by upvotes
@@ -84,7 +84,7 @@ def get_feedback_stats() -> dict:
     try:
         with open(FEEDBACK_FILE, "r") as f:
             examples = json.load(f)
-    except:
+    except Exception:
         return {"total": 0, "by_category": {}}
 
     by_category = {}

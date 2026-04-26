@@ -1,0 +1,70 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "20px",
+    "fontFamily": "Arial, sans-serif",
+    "primaryColor": "#dbeafe",
+    "primaryTextColor": "#1e3a5f",
+    "primaryBorderColor": "#3b82f6",
+    "lineColor": "#475569",
+    "secondaryColor": "#dcfce7",
+    "tertiaryColor": "#fef9c3"
+  }
+}}%%
+erDiagram
+    USER_QUERY {
+        string query_text
+        string intent_type
+        string timestamp
+    }
+    ANIMATION_PLAN {
+        string title
+        string visual_style
+        string visual_metaphor
+        int duration_seconds
+        string pedagogical_arc
+        string emotional_beats
+    }
+    SEGMENT {
+        string type
+        int duration_seconds
+        string visual_focus
+        string emotional_target
+    }
+    STEP {
+        string description
+        string voiceover_text
+        string key_text
+        string animation_type
+    }
+    GENERATED_CODE {
+        string code_content
+        int code_lines
+        string query
+        string plan_reference
+        int attempt_number
+    }
+    FAILURE_LOG {
+        string id
+        string timestamp
+        string failure_type
+        string error
+        string tags
+        int attempt
+    }
+    FEEDBACK_EXAMPLE {
+        string query
+        string code
+        string category
+        string plan
+        int upvotes
+        string timestamp
+    }
+
+    USER_QUERY ||--|| ANIMATION_PLAN : generates
+    ANIMATION_PLAN ||--|{ SEGMENT : contains
+    SEGMENT ||--|{ STEP : has
+    USER_QUERY ||--|{ GENERATED_CODE : prompts
+    ANIMATION_PLAN ||--|{ GENERATED_CODE : implements
+    GENERATED_CODE ||--o{ FAILURE_LOG : logs
+    GENERATED_CODE ||--o| FEEDBACK_EXAMPLE : promoted_to

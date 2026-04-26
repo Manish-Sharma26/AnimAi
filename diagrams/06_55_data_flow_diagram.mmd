@@ -1,0 +1,25 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "20px",
+    "fontFamily": "Arial, sans-serif",
+    "primaryColor": "#dbeafe",
+    "primaryTextColor": "#1e3a5f",
+    "primaryBorderColor": "#3b82f6",
+    "lineColor": "#475569",
+    "secondaryColor": "#dcfce7",
+    "tertiaryColor": "#fef9c3"
+  }
+}}%%
+flowchart LR
+    USER(["👤 User"])
+    SYS["🎬 AnimAI Studio"]
+    EXT["☁️ External APIs<br/>Gemini · TTS · Docker"]
+
+    USER -->|topic / question| SYS
+    SYS -->|narrated MP4 video| USER
+    SYS <-->|API calls| EXT
+
+    style USER fill:#3b82f6,color:#fff,stroke:#2563eb
+    style SYS fill:#7c3aed,color:#fff,stroke:#5b21b6
+    style EXT fill:#f97316,color:#fff,stroke:#ea580c

@@ -1,0 +1,62 @@
+flowchart TD
+    subgraph FL["🖥️ FRONTEND LAYER"]
+        direction LR
+        UI["**Streamlit Web UI**"]
+        subgraph UI_FEATURES[" "]
+            direction LR
+            F1["Plan Approval"]
+            F2["Video Preview"]
+            F3["Feedback Controls"]
+        end
+        UI --- UI_FEATURES
+    end
+
+    subgraph AOL["⚙️ AGENT ORCHESTRATION LAYER"]
+        direction TB
+        subgraph AGENTS[" "]
+            direction LR
+            AG1["Teacher\nAgent"]
+            AG2["Planner\nAgent"]
+            AG3["Coder\nAgent"]
+            AG4["Debugger\nAgent"]
+            AG1 --> AG2 --> AG3 --> AG4
+        end
+        subgraph RAG_BOX["RAG Engine"]
+            direction TB
+            RAG1["FAISS Vector Index"]
+            RAG2["Sentence Transformer\nEmbeddings"]
+        end
+        AG3 -.->|retrieves API patterns| RAG_BOX
+    end
+
+    subgraph EXL["🐳 EXECUTION LAYER"]
+        direction TB
+        subgraph DOCKER["Docker Sandbox Container"]
+            direction LR
+            D1["Manim\nRenderer"]
+            D2["Voiceover\nEngine"]
+            D3["Azure / gTTS\nTTS Provider"]
+        end
+    end
+
+    FL -->|user request + plan approval| AOL
+    AOL -->|generated Manim code| EXL
+
+    style FL fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    style AOL fill:#dcfce7,stroke:#22c55e,color:#14532d
+    style EXL fill:#fce7f3,stroke:#ec4899,color:#831843
+    style UI fill:#3b82f6,color:#fff,stroke:#2563eb
+    style AG1 fill:#34d399,color:#fff,stroke:#059669
+    style AG2 fill:#34d399,color:#fff,stroke:#059669
+    style AG3 fill:#f97316,color:#fff,stroke:#ea580c
+    style AG4 fill:#f87171,color:#fff,stroke:#dc2626
+    style RAG_BOX fill:#e0f2fe,stroke:#38bdf8,color:#0c4a6e
+    style RAG1 fill:#e0f2fe,stroke:#38bdf8,color:#0c4a6e
+    style RAG2 fill:#e0f2fe,stroke:#38bdf8,color:#0c4a6e
+    style DOCKER fill:#f3e8ff,stroke:#a855f7,color:#581c87
+    style D1 fill:#a78bfa,color:#fff,stroke:#7c3aed
+    style D2 fill:#a78bfa,color:#fff,stroke:#7c3aed
+    style D3 fill:#a78bfa,color:#fff,stroke:#7c3aed
+    style F1 fill:#93c5fd,color:#1e3a5f,stroke:#3b82f6
+    style F2 fill:#93c5fd,color:#1e3a5f,stroke:#3b82f6
+    style F3 fill:#93c5fd,color:#1e3a5f,stroke:#3b82f6

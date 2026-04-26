@@ -1,0 +1,45 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "20px",
+    "fontFamily": "Arial, sans-serif",
+    "primaryColor": "#dbeafe",
+    "primaryTextColor": "#1e3a5f",
+    "primaryBorderColor": "#3b82f6",
+    "lineColor": "#475569",
+    "secondaryColor": "#dcfce7",
+    "tertiaryColor": "#fef9c3"
+  }
+}}%%
+flowchart TD
+    REQ(["✏️ User requests changes to existing video"])
+    REQ --> REV
+
+    REV["Coder Agent: revise_manim_code<br/>Existing code + plan<br/>Change request text<br/>RAG API context<br/>Preserve 5-segment structure"]
+    REV --> VAL
+
+    VAL["Validate revised code<br/>Truncation check and recovery"]
+    VAL --> PRE
+
+    PRE["Apply preventive fixes"]
+    PRE --> COMP
+
+    COMP["Compile in Docker Sandbox<br/>with self-healing loop"]
+    COMP --> DEC
+
+    DEC{Success?}
+    DEC -->|YES| OUT
+    DEC -->|NO| DBG
+
+    OUT(["🎬 Return Revised Video"])
+    DBG["Debug + Retry<br/>up to 3x"]
+    DBG --> COMP
+
+    style REQ fill:#3b82f6,color:#fff,stroke:#2563eb
+    style OUT fill:#22c55e,color:#fff,stroke:#16a34a
+    style REV fill:#f97316,color:#fff,stroke:#ea580c
+    style VAL fill:#a78bfa,color:#fff,stroke:#7c3aed
+    style PRE fill:#34d399,color:#fff,stroke:#059669
+    style COMP fill:#94a3b8,color:#fff,stroke:#64748b
+    style DBG fill:#f87171,color:#fff,stroke:#dc2626
+    style DEC fill:#fef3c7,stroke:#f59e0b,color:#78350f

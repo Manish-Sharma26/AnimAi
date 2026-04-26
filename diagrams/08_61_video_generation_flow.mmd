@@ -1,0 +1,63 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "20px",
+    "fontFamily": "Arial, sans-serif",
+    "primaryColor": "#dbeafe",
+    "primaryTextColor": "#1e3a5f",
+    "primaryBorderColor": "#3b82f6",
+    "lineColor": "#475569",
+    "secondaryColor": "#dcfce7",
+    "tertiaryColor": "#fef9c3"
+  }
+}}%%
+flowchart TD
+    S(["▶ START"])
+    S --> A
+
+    A["User enters topic / query"]
+    A --> B
+
+    B["Classify Intent<br/>bare_topic / detailed"]
+    B --> C
+
+    C["Teacher Agent<br/>generates pedagogical curriculum"]
+    C --> D
+
+    D["Retrieve topic visual hints<br/>if available"]
+    D --> E
+
+    E["Planner Agent<br/>generates 5-segment animation plan"]
+    E --> F
+
+    F["User reviews and approves<br/>the animation plan"]
+    F --> G
+
+    G["RAG retrieves Manim API<br/>patterns from FAISS"]
+    G --> H
+
+    H["Coder Agent generates<br/>Manim Python code<br/>with preventive fixes"]
+    H --> I
+
+    I["Validate code structure<br/>11 checks"]
+    I --> J
+
+    J["Compile in Docker Sandbox"]
+    J --> DEC
+
+    DEC{Success?}
+    DEC -->|YES| OUT
+    DEC -->|NO| HEAL
+
+    OUT(["🎬 Return MP4 Video"])
+    HEAL(["⚙️ Enter Self-Heal Loop<br/>see §6.2"])
+
+    style S fill:#1e3a5f,color:#fff,stroke:#3b82f6
+    style OUT fill:#22c55e,color:#fff,stroke:#16a34a
+    style HEAL fill:#f97316,color:#fff,stroke:#ea580c
+    style DEC fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    style B fill:#a78bfa,color:#fff,stroke:#7c3aed
+    style C fill:#34d399,color:#fff,stroke:#059669
+    style E fill:#34d399,color:#fff,stroke:#059669
+    style H fill:#f97316,color:#fff,stroke:#ea580c
+    style G fill:#e0f2fe,stroke:#38bdf8,color:#0c4a6e

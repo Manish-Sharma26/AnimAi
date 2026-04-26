@@ -1,0 +1,71 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "20px",
+    "fontFamily": "Arial, sans-serif",
+    "primaryColor": "#dbeafe",
+    "primaryTextColor": "#1e3a5f",
+    "primaryBorderColor": "#3b82f6",
+    "lineColor": "#475569",
+    "secondaryColor": "#dcfce7",
+    "tertiaryColor": "#fef9c3"
+  }
+}}%%
+flowchart TD
+    subgraph UL[" 🖥️  USER LAYER "]
+        UI["**Streamlit Web UI** *(app.py)*"]
+        subgraph UI_INNER[" "]
+            direction LR
+            A1[Topic Input]
+            A2[Plan Viewer & Editor]
+            A3[Video Player & Feedback Controls]
+        end
+        UI --- UI_INNER
+    end
+
+    subgraph OL[" ⚙️  ORCHESTRATION LAYER "]
+        ORC["**Orchestrator** *(orchestrator.py)*"]
+        subgraph ORC_INNER[" "]
+            direction LR
+            O1["build_plan()"] --> O2["run_agent_with_plan()"] --> O3["apply_changes()"]
+            O1 --- TP[Teacher + Planner]
+            O2 --- CD[Compile + Debug Loop]
+            O3 --- RL[Revise Loop]
+        end
+        ORC --- ORC_INNER
+    end
+
+    subgraph AL[" 🤖  AGENT LAYER "]
+        direction TB
+        subgraph AGENTS[" "]
+            direction LR
+            AG1["Teacher Agent<br/>Pedagogy Design"]
+            AG2["Planner Agent<br/>5-Seg Planning"]
+            AG3["Coder Agent<br/>Manim CodeGen"]
+            AG4["Debugger Agent<br/>Deterministic + LLM Fix"]
+        end
+        LLM["Gemini LLM API - llm.py<br/>Model Discovery → Fallback → Response Parse"]
+        RAG["RAG Engine - rag/retriever.py<br/>FAISS Index + Sentence Transformer + Manim Doc Chunks"]
+        AGENTS --> LLM --> RAG
+    end
+
+    subgraph EL[" 🐳  EXECUTION LAYER "]
+        direction LR
+        subgraph DOCKER["Docker Sandbox - sandbox/sandbox.py"]
+            E1[Manim Renderer]
+            E2[Voiceover Engine]
+            E3[Azure / gTTS]
+        end
+        FL["Failure Logger - agent/failure_logger.py<br/>JSON Bundles + JSONL Index + Legacy Flat Files"]
+    end
+
+    UL -->|user request| OL
+    OL -->|orchestrated plan| AL
+    AL -->|generated code| EL
+
+    style UL fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    style OL fill:#dcfce7,stroke:#22c55e,color:#14532d
+    style AL fill:#fef9c3,stroke:#eab308,color:#713f12
+    style EL fill:#fce7f3,stroke:#ec4899,color:#831843
+    style LLM fill:#ffffff,stroke:#6b7280
+    style RAG fill:#ffffff,stroke:#6b7280
