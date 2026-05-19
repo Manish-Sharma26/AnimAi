@@ -36,6 +36,9 @@ data/
 .DS_Store
 Thumbs.db
 
+# Node.js
+node_modules/
+
 # Temporary Docker files
 tmp/
 temp/
