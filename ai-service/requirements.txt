@@ -1,0 +1,5 @@
+# AnimAI AI Service — Python Dependencies
+# These are ON TOP of the root requirements.txt (agent/ dependencies)
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.5.0

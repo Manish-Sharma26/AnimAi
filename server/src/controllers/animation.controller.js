@@ -16,6 +16,7 @@
 const Animation = require("../models/Animation");
 const { validate, createAnimationSchema, updatePlanSchema, paginationSchema } = require("../utils/validators");
 const { videoQueue } = require("../services/queue");
+const { deleteVideo } = require("../services/cloudinary");
 
 // ── POST /api/animations ─────────────────────────────────────────────────────
 // Create a new animation with a prompt (status starts as "planning")
@@ -128,7 +129,7 @@ const updateAnimation = async (req, res, next) => {
 };
 
 // ── DELETE /api/animations/:id ───────────────────────────────────────────────
-// Delete an animation (later: also delete from Cloudinary in Step 7)
+// Delete animation + Cloudinary asset
 const deleteAnimation = async (req, res, next) => {
   try {
     const animation = await Animation.findOneAndDelete({
@@ -143,7 +144,12 @@ const deleteAnimation = async (req, res, next) => {
       });
     }
 
-    // TODO (Step 7): Delete video from Cloudinary using animation.videoPublicId
+    // Delete video from Cloudinary CDN (non-blocking, don't fail if it errors)
+    if (animation.videoPublicId) {
+      deleteVideo(animation.videoPublicId).catch((err) =>
+        console.warn(`[Cloudinary] Failed to delete ${animation.videoPublicId}: ${err.message}`)
+      );
+    }
 
     res.json({
       message: "Animation deleted",

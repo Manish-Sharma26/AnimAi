@@ -14,12 +14,14 @@
  */
 
 const express = require("express");
+const http = require("http");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const config = require("./config/env");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
+const { initSocket } = require("./sockets/progress");
 
 // ── Create Express app ──────────────────────────────────────────────────────
 const app = express();
@@ -94,13 +96,20 @@ const PORT = config.PORT;
 const startServer = async () => {
   await connectDB();
 
-  app.listen(PORT, () => {
+  // Create HTTP server (needed for Socket.io to piggyback on)
+  const httpServer = http.createServer(app);
+
+  // Attach Socket.io to the HTTP server
+  initSocket(httpServer);
+
+  httpServer.listen(PORT, () => {
     console.log(`\n${"=".repeat(50)}`);
     console.log(`🚀 AnimAI Studio API Server`);
     console.log(`${"=".repeat(50)}`);
     console.log(`→ Environment : ${config.NODE_ENV}`);
     console.log(`→ Port        : ${PORT}`);
     console.log(`→ Health      : http://localhost:${PORT}/api/health`);
+    console.log(`→ WebSocket   : ws://localhost:${PORT}`);
     console.log(`${"=".repeat(50)}\n`);
   });
 };

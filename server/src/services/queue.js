@@ -33,18 +33,18 @@
 const { Queue, Worker } = require("bullmq");
 const { createRedisConnection } = require("../config/redis");
 const Animation = require("../models/Animation");
+const { generateVideo } = require("./pythonBridge");
+const { uploadVideo } = require("./cloudinary");
+const { emitToUser } = require("../sockets/progress");
 
 // ── Queue: where jobs wait to be processed ───────────────────────────────────
 const videoQueue = new Queue("video-generation", {
   connection: createRedisConnection(),
   defaultJobOptions: {
-    attempts: 2,        // retry once if worker crashes
-    backoff: {
-      type: "exponential",
-      delay: 5000,      // wait 5s before first retry, 10s before second
-    },
-    removeOnComplete: { count: 100 },  // keep last 100 completed jobs
-    removeOnFail: { count: 50 },       // keep last 50 failed jobs
+    attempts: 2,
+    backoff: { type: "exponential", delay: 5000 },
+    removeOnComplete: { count: 100 },
+    removeOnFail: { count: 50 },
   },
 });
 
@@ -59,40 +59,65 @@ const worker = new Worker(
       // Update status to "generating"
       await Animation.findByIdAndUpdate(animationId, { status: "generating" });
 
-      // ── Stage 1: Planning (simulated for now) ──────────────────────────
+      // ── Stage 1: Call Python AI pipeline ────────────────────────────────
       await job.updateProgress(20);
-      console.log(`[Worker] Job ${job.id}: Planning... (20%)`);
-      await sleep(2000);
+      emitToUser(userId, "job:progress", { animationId, step: "planning", percent: 20 });
+      console.log(`[Worker] Job ${job.id}: Calling Python pipeline... (20%)`);
 
-      // ── Stage 2: Generating code (simulated) ──────────────────────────
-      await job.updateProgress(40);
-      console.log(`[Worker] Job ${job.id}: Generating code... (40%)`);
-      await sleep(2000);
+      const result = await generateVideo(prompt, plan || {});
 
-      // ── Stage 3: Compiling video (simulated) ──────────────────────────
+      // ── Stage 2: Check result ──────────────────────────────────────────
       await job.updateProgress(60);
-      console.log(`[Worker] Job ${job.id}: Compiling video... (60%)`);
-      await sleep(3000);
+      emitToUser(userId, "job:progress", { animationId, step: "compiling", percent: 60 });
 
-      // ── Stage 4: Uploading (simulated) ─────────────────────────────────
+      if (result.status !== "success") {
+        throw new Error(result.error || "Python pipeline returned failure");
+      }
+
+      console.log(`[Worker] Job ${job.id}: Video generated at ${result.video_path} (60%)`);
+
+      // ── Stage 3: Upload to Cloudinary ─────────────────────────────────
       await job.updateProgress(80);
-      console.log(`[Worker] Job ${job.id}: Uploading... (80%)`);
-      await sleep(1000);
+      emitToUser(userId, "job:progress", { animationId, step: "uploading", percent: 80 });
+      console.log(`[Worker] Job ${job.id}: Uploading to Cloudinary... (80%)`);
 
-      // ── Complete ───────────────────────────────────────────────────────
-      // In Step 6+7: this will call Python pipeline + Cloudinary upload
-      // For now: mark as success with dummy data
+      let videoUrl = result.video_path; // fallback to local path
+      let videoPublicId = null;
+      let thumbnailUrl = null;
+      let videoDuration = null;
+      let videoSizeBytes = null;
+
+      try {
+        const cloud = await uploadVideo(result.video_path, animationId);
+        videoUrl = cloud.url;
+        videoPublicId = cloud.publicId;
+        thumbnailUrl = cloud.thumbnailUrl;
+        videoDuration = cloud.duration;
+        videoSizeBytes = cloud.bytes;
+        console.log(`[Worker] Job ${job.id}: Uploaded → ${cloud.url}`);
+      } catch (uploadErr) {
+        // Non-fatal: video was generated, just couldn't upload to CDN
+        console.warn(`[Worker] Job ${job.id}: Cloudinary upload failed (using local path): ${uploadErr.message}`);
+      }
+
+      // ── Stage 4: Update MongoDB with results ───────────────────────────
       await Animation.findByIdAndUpdate(animationId, {
         status: "success",
-        videoUrl: "https://placeholder.com/video.mp4",  // Real URL in Step 7
-        attempts: 1,
-        hasAudio: true,
+        generatedCode: result.code,
+        videoUrl,
+        videoPublicId,
+        thumbnailUrl,
+        videoDuration,
+        videoSizeBytes,
+        hasAudio: result.has_audio || false,
+        attempts: result.attempts || 1,
       });
 
       await job.updateProgress(100);
-      console.log(`[Worker] Job ${job.id}: COMPLETE ✅`);
+      emitToUser(userId, "job:complete", { animationId, videoUrl, thumbnailUrl });
+      console.log(`[Worker] Job ${job.id}: COMPLETE`);
 
-      return { animationId, status: "success" };
+      return { animationId, status: "success", videoUrl };
 
     } catch (err) {
       console.error(`[Worker] Job ${job.id}: FAILED ❌ — ${err.message}`);
@@ -102,12 +127,14 @@ const worker = new Worker(
         error: err.message,
       });
 
-      throw err; // BullMQ will retry if attempts remain
+      emitToUser(userId, "job:failed", { animationId, error: err.message });
+
+      throw err;
     }
   },
   {
     connection: createRedisConnection(),
-    concurrency: 2, // process max 2 jobs at a time
+    concurrency: 2,
   }
 );
 
@@ -119,11 +146,6 @@ worker.on("completed", (job) => {
 worker.on("failed", (job, err) => {
   console.log(`[Worker] Job ${job?.id} failed: ${err.message}`);
 });
-
-// ── Helper ───────────────────────────────────────────────────────────────────
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 // ── Exports ──────────────────────────────────────────────────────────────────
 module.exports = { videoQueue, worker };

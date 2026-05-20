@@ -28,13 +28,13 @@ const config = {
   REDIS_HOST: process.env.REDIS_HOST || "localhost",
   REDIS_PORT: parseInt(process.env.REDIS_PORT) || 6379,
 
-  // Python AI Service (Step 6)
-  // PYTHON_API_URL: process.env.PYTHON_API_URL || "http://localhost:8000",
+  // Python AI Service
+  PYTHON_API_URL: process.env.PYTHON_API_URL || "http://localhost:8000",
 
-  // Cloudinary (Step 7)
-  // CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
-  // CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
-  // CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+  // Cloudinary
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
 };
 
 module.exports = config;
