@@ -60,8 +60,10 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// ── Auth Routes ──────────────────────────────────────────────────────────────
+app.use("/api/auth", require("./routes/auth.routes"));
+
 // Future routes will be added here:
-// app.use("/api/auth", require("./routes/auth.routes"));           // Step 3
 // app.use("/api/animations", require("./routes/animation.routes")); // Step 4
 // app.use("/api/feedback", require("./routes/feedback.routes"));    // Step 4
 // app.use("/api/gallery", require("./routes/gallery.routes"));      // Step 7
