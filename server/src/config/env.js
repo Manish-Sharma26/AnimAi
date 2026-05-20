@@ -24,9 +24,9 @@ const config = {
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
 
-  // Redis (Step 5)
-  // REDIS_HOST: process.env.REDIS_HOST || "localhost",
-  // REDIS_PORT: process.env.REDIS_PORT || 6379,
+  // Redis
+  REDIS_HOST: process.env.REDIS_HOST || "localhost",
+  REDIS_PORT: parseInt(process.env.REDIS_PORT) || 6379,
 
   // Python AI Service (Step 6)
   // PYTHON_API_URL: process.env.PYTHON_API_URL || "http://localhost:8000",
