@@ -1,0 +1,14 @@
+node_modules
+client
+server
+.git
+.venv
+venv
+__pycache__
+*.pyc
+anim_videos
+outputs
+data
+diagrams
+showcase
+.env

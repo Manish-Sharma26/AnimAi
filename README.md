@@ -1,218 +1,275 @@
-# 🎬 AnimAI Studio
+<p align="center">
+  <h1 align="center">🎬 AnimAI Studio</h1>
+  <p align="center">
+    <strong>AI-powered animated video generation platform</strong><br/>
+    Turn any concept into a beautiful, narrated Manim animation — in seconds.
+  </p>
+  <p align="center">
+    <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white" />
+    <img src="https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white" />
+    <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white" />
+    <img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white" />
+    <img src="https://img.shields.io/badge/Socket.io-4-010101?logo=socketdotio&logoColor=white" />
+    <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" />
+    <img src="https://img.shields.io/badge/Cloudinary-CDN-3448C5?logo=cloudinary&logoColor=white" />
+    <img src="https://img.shields.io/badge/Manim-CE-yellow?logo=python&logoColor=white" />
+  </p>
+</p>
 
-AI-powered educational animation generator that creates professional Manim animations from natural language descriptions using a multi-agent pipeline.
+---
 
-## ✨ Features
+## 📸 Screenshots
 
-- 🤖 **Multi-Agent Pipeline**: Teacher → Planner → Coder → Validator → Debugger orchestration
-- 🧑‍🏫 **Teacher Agent**: Breaks down concepts with analogies, key terms, and step-by-step explanations before planning
-- 🎯 **Intent Classification**: Automatically detects bare topics, simple explanations, and detailed requests
-- 🎨 **Professional Design System**: Consistent dark theme with stunning visuals
-- 🔄 **Self-Healing Code**: Automatic debugging and retry logic with structured failure logging
-- 🎙️ **Native Manim Voiceover**: Narration rendered directly during Manim scene execution
-- 📚 **RAG-Enhanced**: Retrieves relevant Manim patterns from documentation via FAISS
-- 📈 **Learning System**: Improves over time from user feedback
-- ✅ **Video Validator**: Checks generated code for segment structure, voiceover coverage, and cleanup patterns
-- 📊 **Failure Analytics**: Persistent failure logging with tag-based analysis and viewer UI
-- 🔒 **Safe Execution**: Docker-isolated code compilation
+<table>
+  <tr>
+    <td><img src="docs/screenshots/home-page.png" alt="Home" /><br/><sub>Home — Prompt input with examples</sub></td>
+    <td><img src="docs/screenshots/auth-page.png" alt="Auth" /><br/><sub>Auth — Login with JWT</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/gallery-page.png" alt="Gallery" /><br/><sub>Gallery — User's animations</sub></td>
+    <td><img src="docs/screenshots/explore-page.png" alt="Explore" /><br/><sub>Explore — Community gallery</sub></td>
+  </tr>
+</table>
+
+---
 
 ## 🏗️ Architecture
 
 ```
-User Query
-    │
-    ▼
-┌──────────────┐
-│ Intent       │── bare_topic / simple_explanation / detailed
-│ Classifier   │
-└──────┬───────┘
-       ▼
-┌──────────────┐    ┌──────────────┐
-│ Teacher      │───▶│ Planner      │── structured plan with voiceover script
-│ Agent        │    │ Agent        │
-└──────────────┘    └──────┬───────┘
-                           ▼
-                    ┌──────────────┐    ┌──────────────┐
-                    │ Coder        │───▶│ Validator    │── checks segment structure
-                    │ Agent        │    │ Agent        │
-                    └──────┬───────┘    └──────────────┘
-                           ▼
-                    ┌──────────────┐    ┌──────────────┐
-                    │ Docker       │◀──▶│ Debugger     │── self-healing retry loop
-                    │ Sandbox      │    │ Agent        │
-                    └──────┬───────┘    └──────────────┘
-                           ▼
-                     Final MP4 Video
+┌─────────────┐     ┌──────────────────┐     ┌───────────────┐
+│   React     │────▶│  Express API     │────▶│  FastAPI +    │
+│   (Vite)    │ WS  │  + Socket.io     │ HTTP│  Manim Render │
+│   :5173     │◀────│  + BullMQ Worker │◀────│  :8000        │
+└─────────────┘     └────────┬─────────┘     └───────────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ▼              ▼              ▼
+        ┌──────────┐  ┌──────────┐  ┌──────────────┐
+        │  Redis   │  │ MongoDB  │  │  Cloudinary  │
+        │  Queue   │  │  Atlas   │  │  CDN         │
+        │  :6379   │  │  (Cloud) │  │  (Cloud)     │
+        └──────────┘  └──────────┘  └──────────────┘
 ```
 
-## 📋 Prerequisites
+### Data Flow
 
-- Python 3.9 or higher
-- Docker Desktop installed and running
-- FFmpeg installed
-- Gemini API key
-- Azure Speech resource (Azure for Students supported)
+1. **User** types a prompt → React creates an animation via `POST /api/animations`
+2. **Generate** button → `POST /api/animations/generate` → BullMQ queues the job
+3. **Worker** picks up the job → calls Python FastAPI → Manim renders the video
+4. **Cloudinary** receives the `.mp4` → returns CDN URL + auto-thumbnail
+5. **Socket.io** pushes real-time progress events to the React client
+6. **Video** plays in the Studio page from Cloudinary edge servers worldwide
 
-## 🚀 Setup
+---
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Manish-Sharma26/AnimAi.git
-   cd AnimAi
-   ```
+## 🛠️ Tech Stack
 
-2. **Create virtual environment**
-   ```bash
-   # Windows
-   python -m venv venv
-   venv\Scripts\activate
-   
-   # Mac/Linux
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Frontend** | React 18 + Vite | SPA with routing, auth context, WebSocket hook |
+| **API** | Express.js + Node 22 | REST API, JWT auth, middleware |
+| **Real-time** | Socket.io | Push progress events (planning → generating → uploading) |
+| **Queue** | BullMQ + Redis | Async job processing for video generation |
+| **AI/Render** | Python + Manim CE | LLM generates code → Manim renders animation video |
+| **CDN** | Cloudinary | Video hosting, auto-thumbnails, global delivery |
+| **Database** | MongoDB Atlas | User accounts, animation metadata, plans |
+| **Auth** | JWT + bcrypt | Stateless authentication with 7-day expiry |
+| **DevOps** | Docker Compose | One-command deployment of all services |
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+---
 
-4. **Set up environment variables**
-   
-   Create a `.env` file in the root directory:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
+## 🚀 Quick Start
 
-   # TTS provider selection
-   TTS_PROVIDER=azure
-   TTS_FALLBACK_PROVIDER=gtts
+### Prerequisites
 
-   # Azure Speech (required when TTS_PROVIDER=azure)
-   AZURE_SUBSCRIPTION_KEY=your_azure_speech_key
-   AZURE_SERVICE_REGION=centralindia
-   AZURE_TTS_VOICE=en-IN-NeerjaNeural
-   AZURE_TTS_STYLE=general
-   ```
+- [Node.js 22+](https://nodejs.org)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) (for Redis + Manim)
+- [MongoDB Atlas](https://www.mongodb.com/atlas) account (free tier)
+- [Cloudinary](https://cloudinary.com) account (free tier)
+- [Google AI](https://aistudio.google.com) API key (for Gemini)
 
-5. **Build Docker image**
-   ```bash
-   docker build -t manim-voiceover .
-   ```
+### 1. Clone & Setup
 
-6. **Initialize RAG system** (first time only)
-   ```bash
-   python rag/download_docs.py
-   ```
-   This downloads Manim documentation and builds the FAISS search index (~2-3 minutes).
+```bash
+git clone https://github.com/Manish-Sharma26/AnimAi.git
+cd AnimAi
+```
 
-7. **Run the application**
-   ```bash
-   streamlit run app.py
-   ```
+### 2. Environment Variables
 
-8. **Open your browser**
-   
-   Navigate to `http://localhost:8501`
+Create `server/.env`:
 
-## 🎯 Usage
+```env
+# MongoDB
+MONGO_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/animai
 
-1. Enter a description of the animation you want (e.g., "Animate bubble sort with array 5 2 8 1 9")
-2. Click **Generate Plan** — the Teacher agent explains the concept, then the Planner builds a structured animation plan
-3. Review and optionally edit the plan JSON
-4. Click **Generate Video With Voice** to compile the narrated animation
-5. Watch your animation and download the MP4
-6. Give feedback to help the system learn!
+# JWT
+JWT_SECRET=your-secret-key
+JWT_EXPIRES_IN=7d
+
+# Redis (Docker handles this)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Python AI Service
+PYTHON_API_URL=http://localhost:8000
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+```
+
+Create root `.env` for Manim/AI:
+
+```env
+GEMINI_API_KEY=your-gemini-api-key
+```
+
+### 3. Start with Docker Compose (Recommended)
+
+```bash
+docker compose up --build
+```
+
+This starts: Redis (:6379) → API (:3001) → React (:5173) → Manim (:8000)
+
+### 4. Or Start Manually
+
+```bash
+# Terminal 1: Redis
+docker run -d --name redis -p 6379:6379 redis:7-alpine
+
+# Terminal 2: Express API
+cd server && npm install && npm run dev
+
+# Terminal 3: React Client
+cd client && npm install && npm run dev
+
+# Terminal 4: Python/Manim (optional — only for video generation)
+cd .. && python -m uvicorn sandbox.sandbox:app --port 8000
+```
+
+### 5. Open
+
+Navigate to **http://localhost:5173** — register an account and start creating!
+
+---
 
 ## 📁 Project Structure
 
 ```
 animai-studio/
-├── app.py                      # Streamlit web interface
-├── Dockerfile                  # Docker image configuration
-├── PROJECT_REPORT.md           # Detailed project documentation
-├── agent/                      # Multi-agent system
-│   ├── orchestrator.py         # Main pipeline coordinator
-│   ├── intent.py               # Query intent classifier (bare_topic / simple / detailed)
-│   ├── teacher.py              # Concept explanation agent (analogies, key terms)
-│   ├── planner.py              # Animation structure planner
-│   ├── coder.py                # Manim code generator
-│   ├── debugger.py             # Automatic error fixing with self-healing loop
-│   ├── validator.py            # Post-generation video structure validator
-│   ├── failure_logger.py       # Persistent failure logging and analytics
-│   ├── topic_hints.py          # Topic-specific Manim patterns and hints
-│   ├── llm.py                  # LLM API wrapper (Gemini)
-│   └── feedback.py             # Learning from user feedback
-├── sandbox/                    # Isolated execution
-│   └── sandbox.py              # Docker-based Manim runner
-├── rag/                        # Retrieval-Augmented Generation
-│   ├── download_docs.py        # Doc scraper and indexer
-│   ├── retriever.py            # FAISS vector similarity search
-│   ├── manim_chunks.json       # Documentation chunks
-│   └── manim_docs.index        # FAISS search index
-├── scripts/                    # Utility and demo scripts
-├── diagrams/                   # Architecture diagrams (Mermaid + PNG)
-├── showcase/                   # Project showcase assets
-├── failure_log_viewer.py       # Streamlit failure log viewer
-├── export_diagrams.js          # Mermaid diagram → PNG exporter
-└── outputs/                    # Generated videos and failure logs
+├── client/                     # React Frontend
+│   ├── src/
+│   │   ├── components/         # Navbar, AnimationCard, ProgressTracker, VideoPlayer
+│   │   ├── context/            # AuthContext (global auth state)
+│   │   ├── hooks/              # useSocket (Socket.io connection)
+│   │   ├── pages/              # Auth, Home, Studio, Gallery, Explore
+│   │   ├── services/           # api.js (Axios + JWT interceptor)
+│   │   └── index.css           # Design system (dark theme, glassmorphism)
+│   ├── vite.config.js          # Proxy /api + /socket.io → Express
+│   └── Dockerfile
+│
+├── server/                     # Express Backend
+│   ├── src/
+│   │   ├── config/             # env.js, db.js, redis.js
+│   │   ├── controllers/        # auth, animation (CRUD + generate + share)
+│   │   ├── middleware/          # JWT auth, error handler
+│   │   ├── models/             # User, Animation, Feedback (Mongoose)
+│   │   ├── routes/             # RESTful route definitions
+│   │   ├── services/           # queue (BullMQ worker), cloudinary, pythonBridge
+│   │   ├── sockets/            # Socket.io init + progress emitter
+│   │   └── index.js            # Express + Socket.io server entry
+│   ├── scripts/                # seed-gallery.js
+│   └── Dockerfile
+│
+├── sandbox/                    # Python Manim Sandbox
+│   └── sandbox.py              # FastAPI server + Docker Manim execution
+│
+├── agent/                      # AI Agent Pipeline
+│   ├── orchestrator.py         # Multi-agent coordination
+│   ├── coder.py                # Manim code generation (Gemini)
+│   ├── planner.py              # Animation plan generation
+│   └── debugger.py             # Auto-fix compilation errors
+│
+├── docker-compose.yml          # Full stack orchestration
+├── Dockerfile.manim            # Manim + FastAPI container
+└── README.md
 ```
-
-## 🛠️ Technology Stack
-
-- **Frontend**: Streamlit
-- **LLM**: Google Gemini
-- **Animation**: Manim Community Edition
-- **Execution**: Docker
-- **RAG**: FAISS + Sentence Transformers
-- **Voiceover**: manim-voiceover + Azure Speech (primary) + gTTS (fallback)
-- **Video Processing**: FFmpeg
-
-## 🎨 Visual Styles
-
-The system automatically chooses the best visual style:
-
-- `array_boxes` - Data structures, search algorithms
-- `bar_chart` - Sorting algorithms, comparisons
-- `diagram` - Biology, chemistry, science concepts
-- `graph_plot` - Mathematical functions, equations
-- `physics_motion` - Moving objects, forces, trajectories
-- `timeline` - History, sequences, processes
-- `flowchart` - Decision trees, workflows
-
-## 🤝 Contributing
-
-Contributions welcome! The system learns from feedback, so the more you use it, the better it gets.
-
-## 📝 License
-
-MIT License - feel free to use for educational purposes!
-
-## ⚠️ Security Note
-
-- Never commit your `.env` file
-- Keep your Gemini API key private
-- Regenerate your API key if accidentally exposed
-
-## 🐛 Troubleshooting
-
-**Docker connection error**: Make sure Docker Desktop is running
-
-**FFmpeg not found**: Install FFmpeg and add to system PATH
-
-**Gemini API error**: Verify your API key in `.env` file
-
-**Azure auth error**: Check `AZURE_SUBSCRIPTION_KEY` and `AZURE_SERVICE_REGION`
-
-**gTTS fallback not used**: Ensure `TTS_FALLBACK_PROVIDER=gtts`
-
-**No video generated**: Check Docker logs with `docker logs <container_id>`
-
-**Failure logs**: Check `outputs/failure_logs/` or run `streamlit run failure_log_viewer.py` for analysis
-
-## 📧 Support
-
-For issues and questions, please open a GitHub issue.
 
 ---
 
-Built with ❤️ for educators and students everywhere
+## 🔌 API Endpoints
+
+### Auth
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Create account |
+| POST | `/api/auth/login` | Login → JWT token |
+| GET | `/api/auth/me` | Validate token, get user |
+
+### Animations (Protected)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/animations` | Create animation with prompt |
+| GET | `/api/animations` | List user's animations (paginated) |
+| GET | `/api/animations/:id` | Get animation details |
+| PUT | `/api/animations/:id` | Update plan/status |
+| PATCH | `/api/animations/:id/share` | Toggle public/private |
+| DELETE | `/api/animations/:id` | Delete (+ Cloudinary cleanup) |
+| POST | `/api/animations/generate` | Queue video generation job |
+| GET | `/api/animations/jobs/:jobId` | Poll job status |
+
+### Public
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/gallery` | Community gallery (no auth) |
+| GET | `/api/health` | Server health check |
+
+### WebSocket Events
+| Event | Direction | Data |
+|-------|-----------|------|
+| `job:progress` | Server → Client | `{ animationId, step, percent }` |
+| `job:complete` | Server → Client | `{ animationId, videoUrl, thumbnailUrl }` |
+| `job:failed` | Server → Client | `{ animationId, error }` |
+
+---
+
+## 🎯 Key Engineering Decisions
+
+<details>
+<summary><strong>Why BullMQ + Redis instead of in-process?</strong></summary>
+
+Video generation takes 30-120 seconds. Processing it in the Express request handler would block the event loop and hang all other requests. BullMQ runs a separate worker that processes jobs asynchronously, keeping the API responsive. Redis provides persistence — jobs survive server restarts.
+</details>
+
+<details>
+<summary><strong>Why Cloudinary instead of serving videos from Express?</strong></summary>
+
+Serving large video files from Express would block the event loop (Node.js is single-threaded). Cloudinary delivers videos from 200+ edge servers worldwide with auto-transcoding, adaptive bitrate, and auto-generated thumbnails. The free tier includes 25GB storage and 25GB bandwidth/month.
+</details>
+
+<details>
+<summary><strong>Why Socket.io instead of polling?</strong></summary>
+
+Polling `/api/jobs/:id` every 2 seconds wastes bandwidth and creates unnecessary load. Socket.io pushes events instantly when the worker reaches each stage. It falls back to HTTP long-polling if WebSocket isn't available. JWT auth in the handshake ensures only authenticated users receive events.
+</details>
+
+<details>
+<summary><strong>Why separate Express + FastAPI?</strong></summary>
+
+Express handles auth, CRUD, and WebSockets well but can't run Python/Manim. FastAPI handles the AI pipeline (Gemini LLM calls + Manim rendering). They communicate via HTTP. This separation means we can scale them independently — 1 API server can fan out to multiple Manim workers.
+</details>
+
+---
+
+## 👤 Author
+
+**Manish Sharma** — [GitHub](https://github.com/Manish-Sharma26)
+
+---
+
+## 📄 License
+
+This project is for educational and portfolio purposes.

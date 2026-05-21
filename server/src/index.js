@@ -71,8 +71,9 @@ app.use("/api/animations", require("./routes/animation.routes"));
 // ── Feedback Routes ──────────────────────────────────────────────────────────
 app.use("/api/feedback", require("./routes/feedback.routes"));
 
-// Future routes:
-// app.use("/api/gallery", require("./routes/gallery.routes"));      // Step 7
+// ── Public Gallery (no auth required) ────────────────────────────────────────
+const { getPublicGallery } = require("./controllers/animation.controller");
+app.get("/api/gallery", getPublicGallery);
 
 // ── 404 Handler ──────────────────────────────────────────────────────────────
 // If no route matched, return a helpful 404

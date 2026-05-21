@@ -23,6 +23,7 @@ const {
   deleteAnimation,
   generateAnimation,
   getJobStatus,
+  toggleShare,
 } = require("../controllers/animation.controller");
 
 // All animation routes require authentication
@@ -34,6 +35,7 @@ router.post("/generate", generateAnimation);   // Must be before /:id
 router.get("/jobs/:jobId", getJobStatus);       // Must be before /:id
 router.get("/:id", getAnimation);
 router.put("/:id", updateAnimation);
+router.patch("/:id/share", toggleShare);
 router.delete("/:id", deleteAnimation);
 
 module.exports = router;

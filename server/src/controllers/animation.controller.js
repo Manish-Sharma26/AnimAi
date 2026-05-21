@@ -242,6 +242,66 @@ const getJobStatus = async (req, res, next) => {
     next(err);
   }
 };
+// ── PATCH /api/animations/:id/share ──────────────────────────────────────────
+// Toggle isPublic — makes animation visible in the Explore community gallery
+const toggleShare = async (req, res, next) => {
+  try {
+    const animation = await Animation.findOne({
+      _id: req.params.id,
+      userId: req.user.id,
+    });
+
+    if (!animation) {
+      return res.status(404).json({
+        error: "Not found",
+        message: "Animation not found or you don't have access",
+      });
+    }
+
+    animation.isPublic = !animation.isPublic;
+    await animation.save();
+
+    res.json({
+      message: animation.isPublic ? "Animation shared publicly" : "Animation made private",
+      isPublic: animation.isPublic,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── GET /api/gallery ─────────────────────────────────────────────────────────
+// Public gallery — returns public animations (no auth required)
+const getPublicGallery = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const animations = await Animation.find({
+      isPublic: true,
+      status: "success",
+    })
+      .select("prompt videoUrl thumbnailUrl videoDuration videoSizeBytes createdAt userId")
+      .populate("userId", "username")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const total = await Animation.countDocuments({ isPublic: true, status: "success" });
+
+    res.json({
+      animations,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 module.exports = {
   createAnimation,
@@ -251,4 +311,6 @@ module.exports = {
   deleteAnimation,
   generateAnimation,
   getJobStatus,
+  toggleShare,
+  getPublicGallery,
 };

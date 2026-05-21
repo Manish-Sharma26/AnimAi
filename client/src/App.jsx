@@ -11,6 +11,8 @@ import Navbar from "./components/Navbar";
 import AuthPage from "./pages/Auth";
 import Home from "./pages/Home";
 import Studio from "./pages/Studio";
+import Gallery from "./pages/Gallery";
+import Explore from "./pages/Explore";
 
 // Protected route wrapper — redirects to /auth if not logged in
 function ProtectedRoute() {
@@ -34,13 +36,13 @@ function AppRoutes() {
       <Routes>
         {/* Public */}
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/explore" element={<Explore />} />
 
         {/* Protected */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Home />} />
           <Route path="/studio/:id" element={<Studio />} />
-          <Route path="/gallery" element={<div className="page fade-in"><h2>Gallery — Step 11</h2></div>} />
-          <Route path="/explore" element={<div className="page fade-in"><h2>Explore — Step 11</h2></div>} />
+          <Route path="/gallery" element={<Gallery />} />
         </Route>
 
         {/* Catch-all */}

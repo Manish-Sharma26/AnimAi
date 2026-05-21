@@ -1,0 +1,44 @@
+# ── AnimAI Manim Sandbox Dockerfile ───────────────────────────────────────
+# Based on the existing Dockerfile but adds FastAPI for HTTP access.
+#
+# This container:
+# 1. Has Manim + voiceover (gTTS) pre-installed
+# 2. Runs a FastAPI server on port 8000
+# 3. Receives code from Node.js API, renders with Manim, returns video path
+#
+# Build:  docker build -t animai-manim -f Dockerfile.manim .
+# Run:    docker run -p 8000:8000 animai-manim
+
+FROM manimcommunity/manim:stable
+USER root
+
+# Install system deps
+RUN apt-get update && apt-get install -y ffmpeg sox && rm -rf /var/lib/apt/lists/*
+
+# Install Python deps
+RUN /opt/venv/bin/pip install --no-cache-dir \
+    "setuptools<81" \
+    "manim-voiceover[azure]" \
+    gTTS \
+    fastapi \
+    uvicorn
+
+WORKDIR /app
+
+# Copy only what the sandbox needs
+COPY sandbox/ ./sandbox/
+COPY agent/ ./agent/
+COPY app.py .
+COPY requirements.txt .
+
+# Install project requirements
+RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt 2>/dev/null || true
+
+# Set Python environment
+ENV PYTHONIOENCODING=utf-8
+ENV PATH="/opt/venv/bin:$PATH"
+
+EXPOSE 8000
+
+# Start FastAPI server
+CMD ["uvicorn", "sandbox.sandbox:app", "--host", "0.0.0.0", "--port", "8000"]

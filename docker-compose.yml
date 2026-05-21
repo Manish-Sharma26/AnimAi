@@ -1,0 +1,86 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# AnimAI Studio — Docker Compose (Full Stack)
+#
+# One command to rule them all:
+#   docker compose up --build
+#
+# Services:
+#   1. redis       — Job queue backend (BullMQ)
+#   2. api         — Node.js Express API server
+#   3. client      — React Vite frontend (dev server)
+#   4. manim       — Python Manim sandbox (video rendering)
+#
+# Network: All services share the "animai" bridge network
+# ═══════════════════════════════════════════════════════════════════════════
+
+services:
+  # ── Redis — In-memory store for BullMQ job queue ─────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: animai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── API — Node.js Express backend ────────────────────────────────────────
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: animai-api
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./server/.env
+    environment:
+      - NODE_ENV=development
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PYTHON_API_URL=http://manim:8000
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - api-videos:/app/outputs
+
+  # ── Client — React Vite dev server ───────────────────────────────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: animai-client
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://api:3001
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # ── Manim — Python FastAPI + Manim rendering sandbox ─────────────────────
+  manim:
+    build:
+      context: .
+      dockerfile: Dockerfile.manim
+    container_name: animai-manim
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    environment:
+      - PYTHONIOENCODING=utf-8
+    volumes:
+      - api-videos:/app/outputs
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  api-videos:
