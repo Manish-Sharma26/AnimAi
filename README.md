@@ -216,7 +216,7 @@ animai-studio/
 | GET | `/api/animations` | List user's animations (paginated) |
 | GET | `/api/animations/:id` | Get animation details |
 | PUT | `/api/animations/:id` | Update plan/status |
-| PATCH | `/api/animations/:id/share` | Toggle public/private |
+do | PATCH | `/api/animations/:id/share` | Toggle public/private |
 | DELETE | `/api/animations/:id` | Delete (+ Cloudinary cleanup) |
 | POST | `/api/animations/generate` | Queue video generation job |
 | GET | `/api/animations/jobs/:jobId` | Poll job status |

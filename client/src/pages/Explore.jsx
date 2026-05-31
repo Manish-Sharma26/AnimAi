@@ -2,7 +2,7 @@
  * Explore Page — Public community gallery
  * 
  * Shows all public animations shared by users (no auth required to view).
- * Read-only — no delete or share buttons.
+ * Clicking a card opens a premium video modal with play button overlay.
  */
 
 import { useState, useEffect } from "react";
@@ -13,6 +13,8 @@ export default function Explore() {
   const [animations, setAnimations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
+  const [selectedAnim, setSelectedAnim] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   const loadPublic = async (page = 1) => {
     setLoading(true);
@@ -29,6 +31,35 @@ export default function Explore() {
 
   useEffect(() => {
     loadPublic();
+  }, []);
+
+  const handleCardClick = async (anim) => {
+    if (anim.videoUrl) {
+      setSelectedAnim(anim);
+      return;
+    }
+    setModalLoading(true);
+    try {
+      const { data } = await api.get(`/gallery/${anim._id}`);
+      setSelectedAnim(data.animation);
+    } catch (err) {
+      console.error("Failed to load animation:", err);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const closeModal = () => {
+    setSelectedAnim(null);
+  };
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") closeModal();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
   return (
@@ -59,6 +90,7 @@ export default function Explore() {
                 key={anim._id}
                 animation={anim}
                 showActions={false}
+                onCardClick={handleCardClick}
               />
             ))}
           </div>
@@ -77,6 +109,77 @@ export default function Explore() {
             </div>
           )}
         </>
+      )}
+
+      {/* Video Modal */}
+      {(selectedAnim || modalLoading) && (
+        <div className="explore-modal-overlay" onClick={closeModal}>
+          <div className="explore-modal" onClick={(e) => e.stopPropagation()}>
+            {/* Close button */}
+            <button className="explore-modal__close" onClick={closeModal}>
+              ✕
+            </button>
+
+            {modalLoading ? (
+              <div className="explore-modal__loading">
+                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 3 }} />
+              </div>
+            ) : (
+              <>
+                {/* Video */}
+                <div className="explore-modal__video-wrap">
+                  <video
+                    className="explore-modal__video"
+                    src={selectedAnim?.videoUrl}
+                    poster={selectedAnim?.thumbnailUrl || undefined}
+                    controls
+                    autoPlay
+                    playsInline
+                  />
+                </div>
+
+                {/* Info Bar */}
+                <div className="explore-modal__info">
+                  <div className="explore-modal__info-left">
+                    <p className="explore-modal__prompt">{selectedAnim?.prompt}</p>
+                    <div className="explore-modal__meta">
+                      {selectedAnim?.userId?.username && (
+                        <span className="explore-modal__author">
+                          <span className="explore-modal__avatar">
+                            {selectedAnim.userId.username.charAt(0).toUpperCase()}
+                          </span>
+                          @{selectedAnim.userId.username}
+                        </span>
+                      )}
+                      {selectedAnim?.videoDuration && (
+                        <span className="explore-modal__duration">
+                          🕐 {Math.round(selectedAnim.videoDuration)}s
+                        </span>
+                      )}
+                      {selectedAnim?.videoSizeBytes && (
+                        <span className="explore-modal__size">
+                          📦 {(selectedAnim.videoSizeBytes / 1024 / 1024).toFixed(1)}MB
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="explore-modal__info-right">
+                    <a
+                      href={selectedAnim?.videoUrl}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn--primary btn--sm"
+                    >
+                      ⬇ Download
+                    </a>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

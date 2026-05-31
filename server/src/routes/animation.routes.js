@@ -21,6 +21,7 @@ const {
   getAnimation,
   updateAnimation,
   deleteAnimation,
+  generatePlan,
   generateAnimation,
   getJobStatus,
   toggleShare,
@@ -35,6 +36,7 @@ router.post("/generate", generateAnimation);   // Must be before /:id
 router.get("/jobs/:jobId", getJobStatus);       // Must be before /:id
 router.get("/:id", getAnimation);
 router.put("/:id", updateAnimation);
+router.post("/:id/plan", generatePlan);
 router.patch("/:id/share", toggleShare);
 router.delete("/:id", deleteAnimation);
 

@@ -31,7 +31,7 @@ pythonAPI.interceptors.request.use((req) => {
 });
 
 async function createPlan(prompt) {
-  const { data } = await pythonAPI.post("/plan", { prompt }, { timeout: 60000 });
+  const { data } = await pythonAPI.post("/plan", { prompt }, { timeout: 120000 });
   return data;
 }
 

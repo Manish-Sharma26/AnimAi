@@ -11,9 +11,17 @@ export default function AnimationCard({
   showActions = false,
   onDelete,
   onToggleShare,
+  onCardClick,
 }) {
   const navigate = useNavigate();
 
+  const handleClick = () => {
+    if (onCardClick) {
+      onCardClick(animation);
+    } else {
+      navigate(`/studio/${animation._id}`);
+    }
+  };
   const status = animation.status;
   const prompt = animation.prompt || "Untitled";
   const truncatedPrompt = prompt.length > 80 ? prompt.slice(0, 80) + "..." : prompt;
@@ -29,7 +37,7 @@ export default function AnimationCard({
   return (
     <div
       className="anim-card"
-      onClick={() => navigate(`/studio/${animation._id}`)}
+      onClick={handleClick}
     >
       {/* Thumbnail */}
       <div className="anim-card__thumb">

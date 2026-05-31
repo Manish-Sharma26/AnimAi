@@ -17,6 +17,7 @@ const Animation = require("../models/Animation");
 const { validate, createAnimationSchema, updatePlanSchema, paginationSchema } = require("../utils/validators");
 const { videoQueue } = require("../services/queue");
 const { deleteVideo } = require("../services/cloudinary");
+const { createPlan } = require("../services/pythonBridge");
 
 // ── POST /api/animations ─────────────────────────────────────────────────────
 // Create a new animation with a prompt (status starts as "planning")
@@ -67,7 +68,7 @@ const listAnimations = async (req, res, next) => {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
+        pages: Math.ceil(total / limit),
       },
     });
   } catch (err) {
@@ -156,6 +157,41 @@ const deleteAnimation = async (req, res, next) => {
       id: animation._id,
     });
   } catch (err) {
+    next(err);
+  }
+};
+
+// ── POST /api/animations/:id/plan ────────────────────────────────────────────
+// Generate an animation plan via the Python AI service
+const generatePlan = async (req, res, next) => {
+  try {
+    const animation = await Animation.findOne({
+      _id: req.params.id,
+      userId: req.user.id,
+    });
+
+    if (!animation) {
+      return res.status(404).json({
+        error: "Not found",
+        message: "Animation not found or you don't have access",
+      });
+    }
+
+    // Call Python AI service to generate plan
+    const plan = await createPlan(animation.prompt);
+
+    // Save plan to database
+    animation.plan = plan;
+    animation.status = "planning";
+    await animation.save();
+
+    res.json({
+      message: "Plan generated",
+      plan,
+      animation,
+    });
+  } catch (err) {
+    console.error(`[Plan] Failed to generate plan: ${err.message}`);
     next(err);
   }
 };
@@ -303,14 +339,39 @@ const getPublicGallery = async (req, res, next) => {
   }
 };
 
+// ── GET /api/gallery/:id ─────────────────────────────────────────────────────
+// View a single public animation — no auth required (used by Explore page)
+const getPublicAnimation = async (req, res, next) => {
+  try {
+    const animation = await Animation.findOne({
+      _id: req.params.id,
+      isPublic: true,
+      status: "success",
+    }).populate("userId", "username");
+
+    if (!animation) {
+      return res.status(404).json({
+        error: "Not found",
+        message: "Animation not found or is not public",
+      });
+    }
+
+    res.json({ animation });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createAnimation,
   listAnimations,
   getAnimation,
   updateAnimation,
   deleteAnimation,
+  generatePlan,
   generateAnimation,
   getJobStatus,
   toggleShare,
   getPublicGallery,
+  getPublicAnimation,
 };

@@ -15,6 +15,7 @@
 
 const express = require("express");
 const http = require("http");
+const path = require("path");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
@@ -49,6 +50,12 @@ app.use(express.json({ limit: "10mb" }));
 // URL-encoded body parser — for form submissions
 app.use(express.urlencoded({ extended: true }));
 
+// ── Static file serving for local videos ─────────────────────────────────────
+// When Cloudinary upload fails, videos are served from the local outputs/ folder
+// URL: /api/videos/animation.mp4 → d:\animai-studio\outputs\animation.mp4
+const outputsDir = path.join(__dirname, "..", "..", "outputs");
+app.use("/api/videos", express.static(outputsDir));
+
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 // Health check — use this to verify the server is running
@@ -72,8 +79,9 @@ app.use("/api/animations", require("./routes/animation.routes"));
 app.use("/api/feedback", require("./routes/feedback.routes"));
 
 // ── Public Gallery (no auth required) ────────────────────────────────────────
-const { getPublicGallery } = require("./controllers/animation.controller");
+const { getPublicGallery, getPublicAnimation } = require("./controllers/animation.controller");
 app.get("/api/gallery", getPublicGallery);
+app.get("/api/gallery/:id", getPublicAnimation);
 
 // ── 404 Handler ──────────────────────────────────────────────────────────────
 // If no route matched, return a helpful 404

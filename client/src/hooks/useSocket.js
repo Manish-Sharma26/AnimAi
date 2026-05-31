@@ -1,8 +1,9 @@
 /**
  * useSocket — Socket.io connection hook
  * 
- * Connects to the server with JWT auth, auto-reconnects,
- * and cleans up on unmount.
+ * Connects DIRECTLY to the Express server (port 3001) to avoid
+ * Vite's WebSocket proxy issues (ECONNABORTED on Windows).
+ * Auto-reconnects and cleans up on unmount.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -17,13 +18,20 @@ export default function useSocket() {
   useEffect(() => {
     if (!token) return;
 
-    const socket = io("/", {
+    // Connect directly to the Express server — bypasses Vite's broken WS proxy
+    const socket = io("http://localhost:3001", {
       auth: { token },
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
     });
 
-    socket.on("connect", () => setConnected(true));
-    socket.on("disconnect", () => setConnected(false));
+    socket.on("connect", () => {
+      console.log("[Socket] Connected to server");
+      setConnected(true);
+    });
+    socket.on("disconnect", () => {
+      console.log("[Socket] Disconnected");
+      setConnected(false);
+    });
 
     socketRef.current = socket;
 

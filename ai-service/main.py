@@ -24,6 +24,14 @@ import sys
 import os
 import traceback
 
+# Fix Windows cp1252 encoding crash — agent modules print emoji characters
+# which can't be encoded by the default Windows console encoding.
+os.environ["PYTHONIOENCODING"] = "utf-8"
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional

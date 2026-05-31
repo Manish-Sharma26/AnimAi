@@ -788,6 +788,274 @@ textarea.input {
   margin-top: 2rem;
 }
 
+/* ── Plan Review (Studio page) ───────────────────────────────────────────── */
+.plan-loading {
+  display: flex;
+  justify-content: center;
+}
+
+.plan-loading__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 2rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+}
+
+.plan-loading__text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.plan-review__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.plan-review__subtitle {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
+}
+
+.plan-review__card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.plan-review__field {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.plan-review__field:last-child {
+  border-bottom: none;
+}
+
+.plan-review__label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+}
+
+.plan-review__value {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.plan-review__steps {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
+.plan-review__steps li {
+  margin-bottom: 0.25rem;
+}
+
+.plan-review__teacher {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: var(--radius);
+}
+
+.plan-review__teacher h4 {
+  margin-bottom: 0.75rem;
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.plan-review__teacher p {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 0.4rem;
+}
+
+.plan-review__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* ── Studio Progress Message ─────────────────────────────────────────────── */
+.studio__progress-msg {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+/* ── Explore Video Modal (premium cinema style) ──────────────────────────── */
+.explore-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1.5rem;
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.explore-modal {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 16px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 92vh;
+  overflow: hidden;
+  position: relative;
+  animation: modalSlideUp 0.3s ease-out;
+  box-shadow:
+    0 0 0 1px rgba(139, 92, 246, 0.08),
+    0 24px 80px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(139, 92, 246, 0.06);
+}
+
+.explore-modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.explore-modal__close:hover {
+  background: rgba(139, 92, 246, 0.6);
+  transform: scale(1.1);
+}
+
+.explore-modal__loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6rem 2rem;
+}
+
+.explore-modal__video-wrap {
+  background: #000;
+  position: relative;
+}
+
+.explore-modal__video {
+  width: 100%;
+  display: block;
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+.explore-modal__info {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.03), transparent);
+}
+
+.explore-modal__info-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.explore-modal__info-right {
+  flex-shrink: 0;
+  padding-top: 0.15rem;
+}
+
+.explore-modal__prompt {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: 0.6rem;
+}
+
+.explore-modal__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.explore-modal__author {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.explore-modal__avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.explore-modal__duration,
+.explore-modal__size {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.75rem;
+}
+
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .navbar {
@@ -817,5 +1085,14 @@ textarea.input {
   .gallery__grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1rem;
+  }
+
+  .explore-modal-overlay {
+    padding: 0.75rem;
+  }
+
+  .explore-modal__info {
+    flex-direction: column;
+    gap: 0.75rem;
   }
 }
