@@ -3,7 +3,7 @@ import os
 from agent.llm import call_llm
 from agent.topic_hints import get_topic_hints, format_hints_for_prompt
 
-PLANNER_MODEL = os.getenv("GEMINI_PLANNER_MODEL", "gemini-2.5-flash")
+PLANNER_MODEL = os.getenv("PLANNER_MODEL", "gemini-3.5-flash")
 
 # ─────────────────────────────────────────────────────────────────────
 # WORKING SEGMENT ADVISOR — LLM pre-call to decide what the visual

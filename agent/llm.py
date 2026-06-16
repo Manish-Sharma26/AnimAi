@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from typing import Any, List
 
 from dotenv import load_dotenv
@@ -16,15 +17,22 @@ if not GEMINI_API_KEY:
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-# Prefer highest quality first, then faster/cheaper fallbacks.
-PREFERRED_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+PREFERRED_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 MODEL_PREFERENCE_ORDER = [
     PREFERRED_MODEL,
-    "gemini-3-flash-preview",
+    "gemini-3.5-flash",
     "gemini-2.5-flash",
-    "gemini-3.1-flash-lite-preview",
+    "gemini-3.1-flash-lite",
     "gemini-2.5-flash-lite",
 ]
+
+
+AGENT_MODEL_MAP: dict[str, str] = {
+    "teacher":  os.getenv("TEACHER_MODEL",  "gemini-2.5-flash"),
+    "planner":  os.getenv("PLANNER_MODEL",  "gemini-3.5-flash"),
+    "coder":    os.getenv("CODER_MODEL",    "gemini-3.5-flash"),
+    "debugger": os.getenv("DEBUGGER_MODEL", "gemini-2.5-flash-lite"),
+}
 
 def _normalize_model_name(name: str) -> str:
     if not name:
@@ -32,11 +40,25 @@ def _normalize_model_name(name: str) -> str:
     return name.replace("models/", "")
 
 
+# ── Model discovery cache ───────────────────────────────────────────
+# Avoids hitting client.models.list() on every LLM call.
+# Refreshes automatically after _DISCOVERY_CACHE_TTL seconds.
+_DISCOVERY_CACHE_TTL = 600  # 10 minutes
+_discovery_cache: dict = {"models": None, "timestamp": 0.0}
+
+
 def _discover_generate_content_models() -> List[str]:
     """
     Discover models accessible by this API key and keep only Gemini models
-    that support generateContent.
+    that support generateContent. Results are cached for 10 minutes.
     """
+    now = time.time()
+    if (
+        _discovery_cache["models"] is not None
+        and (now - _discovery_cache["timestamp"]) < _DISCOVERY_CACHE_TTL
+    ):
+        return _discovery_cache["models"]
+
     discovered: List[str] = []
     try:
         for model in client.models.list():
@@ -56,22 +78,39 @@ def _discover_generate_content_models() -> List[str]:
     if not discovered:
         return list(dict.fromkeys(MODEL_PREFERENCE_ORDER))
 
-    return list(dict.fromkeys(discovered))
+    result = list(dict.fromkeys(discovered))
+    _discovery_cache["models"] = result
+    _discovery_cache["timestamp"] = now
+    print(f"[LLM] Discovered {len(result)} models (cached for {_DISCOVERY_CACHE_TTL}s)")
+    return result
 
 
-def _build_model_candidates(preferred_model: str = None) -> List[str]:
-    """Order candidates by preference but keep only discovered models when possible."""
+def _build_model_candidates(preferred_model: str = None, agent_role: str = None) -> List[str]:
+    """Order candidates by preference but keep only discovered models when possible.
+    
+    Args:
+        preferred_model: Explicit model override (highest priority).
+        agent_role: Agent name (e.g. 'coder', 'teacher') to look up
+                    per-agent model from AGENT_MODEL_MAP.
+    """
     available = _discover_generate_content_models()
     available_set = set(available)
 
     ordered: List[str] = []
 
-    effective_preferred = _normalize_model_name(preferred_model or PREFERRED_MODEL)
+    # Priority: explicit preferred_model > agent-specific model > global default
+    if preferred_model:
+        effective_preferred = _normalize_model_name(preferred_model)
+    elif agent_role and agent_role.lower() in AGENT_MODEL_MAP:
+        effective_preferred = _normalize_model_name(AGENT_MODEL_MAP[agent_role.lower()])
+    else:
+        effective_preferred = _normalize_model_name(PREFERRED_MODEL)
+
     preference_order = [
         effective_preferred,
-        "gemini-3-flash-preview",
+        "gemini-3.5-flash",
         "gemini-2.5-flash",
-        "gemini-3.1-flash-lite-preview",
+        "gemini-3.1-flash-lite",
         "gemini-2.5-flash-lite",
     ]
 
@@ -81,12 +120,7 @@ def _build_model_candidates(preferred_model: str = None) -> List[str]:
     if preferred_normalized:
         ordered.append(preferred_normalized)
 
-    # If user asks for 3.0-flash, also try known aliases before fallbacks.
-    if preferred_normalized == "gemini-3-flash-preview":
-        for alias in ["gemini-3.0-flash-preview", "gemini-3.0-flash-exp"]:
-            if alias not in ordered:
-                ordered.append(alias)
-
+  
     for model_name in preference_order:
         normalized = _normalize_model_name(model_name)
         if normalized in available_set and normalized not in ordered:
@@ -161,6 +195,7 @@ def call_llm(
     response_schema: Any = None,
     preferred_model: str = None,
     disable_thinking: bool = False,
+    agent_role: str = None,
 ) -> str:
     """
     Backward-compatible helper returning only text.
@@ -172,6 +207,7 @@ def call_llm(
         response_schema=response_schema,
         preferred_model=preferred_model,
         disable_thinking=disable_thinking,
+        agent_role=agent_role,
     )
     return result["text"]
 
@@ -183,12 +219,21 @@ def call_llm_detailed(
     response_schema: Any = None,
     preferred_model: str = None,
     disable_thinking: bool = False,
+    agent_role: str = None,
 ) -> dict:
     """
     Sends a prompt to Gemini and returns text + diagnostics metadata.
+
+    Args:
+        agent_role: If set (e.g. 'coder', 'teacher'), the agent's
+                    assigned model from AGENT_MODEL_MAP is used as the
+                    primary model, distributing API quota.
     """
     last_error = None
-    candidates = _build_model_candidates(preferred_model=preferred_model)
+    candidates = _build_model_candidates(
+        preferred_model=preferred_model,
+        agent_role=agent_role,
+    )
 
     for model_name in candidates:
         try:

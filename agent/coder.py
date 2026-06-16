@@ -6,7 +6,7 @@ from agent.feedback import get_learned_examples
 from agent.validator import validate_video_structure, format_validation_for_prompt
 from rag.retriever import retrieve as rag_retrieve
 
-CODER_MODEL = os.getenv("GEMINI_CODER_MODEL", "gemini-2.5-flash")
+CODER_MODEL = os.getenv("CODER_MODEL", "gemini-3.5-flash")
 MAX_GENERATION_ATTEMPTS = 3
 MAX_CONTINUATION_ATTEMPTS = 2
 TTS_PROVIDER_DEFAULT = os.getenv("TTS_PROVIDER", "azure").strip().lower()
@@ -1555,8 +1555,18 @@ def _validate_voiceover_loop_timing(code: str) -> str:
     return "; ".join(issues) if issues else ""
 
 
-def _validate_generated_code(code: str, expected_steps: int, query: str = "") -> str:
-    """Return empty string when code looks complete, else a short validation error."""
+def _validate_generated_code(
+    code: str,
+    expected_steps: int,
+    query: str = "",
+    warnings: list = None,
+) -> str:
+    """Return empty string when code looks complete, else a short validation error.
+
+    Args:
+        warnings: If provided, soft warnings are appended to this list
+                  so callers can feed them back to the LLM on retries.
+    """
     if not code.strip():
         return "empty output"
 
@@ -1599,21 +1609,26 @@ def _validate_generated_code(code: str, expected_steps: int, query: str = "") ->
     if tree_error:
         return tree_error
 
+    # ── Soft warnings: collected for LLM feedback + printed ────────────
+    def _record_warning(msg: str) -> None:
+        print(f"[Coder] ⚠️ {msg}")
+        if warnings is not None:
+            warnings.append(msg)
+
     # Check cleanup between scenes
     cleanup_warning = _validate_scene_cleanup(code)
     if cleanup_warning:
-        # Not a hard failure, but log it
-        print(f"[Coder] ⚠️ {cleanup_warning}")
+        _record_warning(cleanup_warning)
 
     # Check voice-text sync pattern
     sync_warning = _validate_voiceover_sync(code)
     if sync_warning:
-        print(f"[Coder] ⚠️ {sync_warning}")
+        _record_warning(sync_warning)
 
     # Check timing budget
     timing_warning = _validate_timing_budget(code)
     if timing_warning:
-        print(f"[Coder] ⚠️ {timing_warning}")
+        _record_warning(timing_warning)
 
     # Check for static self.wait(tracker.duration) calls inside voiceover blocks
     _static_wait_pat = re.compile(
@@ -1621,38 +1636,42 @@ def _validate_generated_code(code: str, expected_steps: int, query: str = "") ->
         re.DOTALL
     )
     if _static_wait_pat.search(code):
-        print("[Coder] ⚠️ STATIC WAIT detected: self.wait(tracker.duration) inside voiceover block "
-              "freezes screen with no animation. Replace with Indicate() or other animated call.")
+        _record_warning(
+            "STATIC WAIT detected: self.wait(tracker.duration) inside voiceover block "
+            "freezes screen with no animation. Replace with Indicate() or other animated call."
+        )
 
     # Check for invisible panel Rectangles that pollute self.mobjects
     if re.search(r'(main_visual_area|key_text_panel)\s*=\s*Rectangle\(', code):
-        print("[Coder] ⚠️ INVISIBLE PANEL detected: main_visual_area/key_text_panel Rectangle objects "
-              "pollute self.mobjects and cause ghost overlap. Use coordinate constants instead.")
+        _record_warning(
+            "INVISIBLE PANEL detected: main_visual_area/key_text_panel Rectangle objects "
+            "pollute self.mobjects and cause ghost overlap. Use coordinate constants instead."
+        )
 
     # Check for Segment 2 overlap anti-patterns
     seg2_overlap = _validate_segment2_layout(code)
     if seg2_overlap:
-        print(f"[Coder] ⚠️ SEGMENT 2 OVERLAP RISK: {seg2_overlap}")
+        _record_warning(f"SEGMENT 2 OVERLAP RISK: {seg2_overlap}")
 
     # Check for invalid color constants (ORANGE_E, PINK_A, etc.)
     color_warning = _validate_color_constants(code)
     if color_warning:
-        print(f"[Coder] ⚠️ COLOR ERROR: {color_warning}")
+        _record_warning(f"COLOR ERROR: {color_warning}")
 
     # Check for hallucinated APIs
     api_warning = _validate_hallucinated_apis(code)
     if api_warning:
-        print(f"[Coder] ⚠️ HALLUCINATED API: {api_warning}")
+        _record_warning(f"HALLUCINATED API: {api_warning}")
 
     # Check for horizontal pipeline overflow
     overflow_warning = _validate_horizontal_overflow(code)
     if overflow_warning:
-        print(f"[Coder] ⚠️ OVERFLOW RISK: {overflow_warning}")
+        _record_warning(f"OVERFLOW RISK: {overflow_warning}")
 
     # Check for voiceover loop timing issues
     loop_warning = _validate_voiceover_loop_timing(code)
     if loop_warning:
-        print(f"[Coder] ⚠️ LOOP TIMING: {loop_warning}")
+        _record_warning(f"LOOP TIMING: {loop_warning}")
 
     try:
         compile(code, "scene.py", "exec")
@@ -1942,11 +1961,12 @@ def generate_manim_code(query: str, plan: dict = None) -> str:
     expected_steps = len(plan.get("steps", []))
     last_code = ""
     last_validation_error = ""
+    last_soft_warnings: list[str] = []
 
     for attempt in range(1, MAX_GENERATION_ATTEMPTS + 1):
         prompt_for_attempt = prompt
         if attempt > 1:
-            prompt_for_attempt += (
+            retry_section = (
                 "\n\nIMPORTANT RETRY INSTRUCTION:\n"
                 "Previous output was incomplete or invalid. "
                 "Return the FULL file from imports to the final wait call. "
@@ -1955,6 +1975,14 @@ def generate_manim_code(query: str, plan: dict = None) -> str:
                 "Check the plan's segments array and generate code for EVERY segment type listed.\n"
                 f"Validation failure to fix: {last_validation_error}\n"
             )
+            if last_soft_warnings:
+                retry_section += (
+                    "\nADDITIONAL QUALITY WARNINGS FROM PREVIOUS ATTEMPT "
+                    "(fix these as well):\n"
+                    + "\n".join(f"- {w}" for w in last_soft_warnings)
+                    + "\n"
+                )
+            prompt_for_attempt += retry_section
 
         response_details = call_llm_detailed(
             prompt_for_attempt,
@@ -1972,7 +2000,10 @@ def generate_manim_code(query: str, plan: dict = None) -> str:
         code = _apply_preventive_fixes(code)
         last_code = code
 
-        validation_error = _validate_generated_code(code, expected_steps=expected_steps, query=query)
+        soft_warnings: list[str] = []
+        validation_error = _validate_generated_code(
+            code, expected_steps=expected_steps, query=query, warnings=soft_warnings,
+        )
 
         if validation_error and "MAX_TOKENS" in finish_reason:
             continued_code = code
@@ -1994,6 +2025,7 @@ def generate_manim_code(query: str, plan: dict = None) -> str:
                     continued_code,
                     expected_steps=expected_steps,
                     query=query,
+                    warnings=soft_warnings,
                 )
                 if not continuation_error:
                     print(f"[Coder] ✅ Continuation succeeded after {hop} hop(s)")
@@ -2008,9 +2040,12 @@ def generate_manim_code(query: str, plan: dict = None) -> str:
             last_code = code if not validation_error else continued_code
 
         if not validation_error:
+            if soft_warnings:
+                print(f"[Coder] ℹ️  Code accepted with {len(soft_warnings)} soft warning(s)")
             break
 
         last_validation_error = validation_error
+        last_soft_warnings = soft_warnings
         print(f"[Coder] ⚠️  Generation attempt {attempt} failed validation: {validation_error}")
     else:
         print("[Coder] ⚠️  Returning last generated code after retries; debugger may be required.")
@@ -2064,15 +2099,24 @@ def revise_manim_code(
     expected_steps = len((plan or {}).get("steps", []))
     last_code = existing_code
     last_validation_error = ""
+    last_soft_warnings: list[str] = []
 
     for attempt in range(1, max_attempts + 1):
         prompt_for_attempt = prompt
         if attempt > 1:
-            prompt_for_attempt += (
+            retry_section = (
                 "\n\nIMPORTANT RETRY INSTRUCTION:\n"
                 "The previous revision was invalid. Return the full corrected file.\n"
                 f"Validation failure to fix: {last_validation_error}\n"
             )
+            if last_soft_warnings:
+                retry_section += (
+                    "\nADDITIONAL QUALITY WARNINGS FROM PREVIOUS ATTEMPT "
+                    "(fix these as well):\n"
+                    + "\n".join(f"- {w}" for w in last_soft_warnings)
+                    + "\n"
+                )
+            prompt_for_attempt += retry_section
 
         details = call_llm_detailed(
             prompt_for_attempt,
@@ -2089,10 +2133,12 @@ def revise_manim_code(
         # Apply preventive fixes BEFORE validation
         candidate = _apply_preventive_fixes(candidate)
 
+        soft_warnings: list[str] = []
         validation_error = _validate_generated_code(
             candidate,
             expected_steps=expected_steps,
             query=query,
+            warnings=soft_warnings,
         )
 
         if validation_error and "MAX_TOKENS" in finish_reason:
@@ -2113,6 +2159,7 @@ def revise_manim_code(
                     continued_code,
                     expected_steps=expected_steps,
                     query=query,
+                    warnings=soft_warnings,
                 )
                 if not validation_error:
                     candidate = continued_code
@@ -2126,6 +2173,7 @@ def revise_manim_code(
 
         last_code = candidate
         last_validation_error = validation_error
+        last_soft_warnings = soft_warnings
         print(f"[Coder] ⚠️  Revision attempt {attempt} failed validation: {validation_error}")
 
     print("[Coder] ⚠️  Returning last revised code after max attempts")

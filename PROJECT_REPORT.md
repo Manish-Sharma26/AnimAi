@@ -16,60 +16,66 @@
 | &nbsp;&nbsp;&nbsp;&nbsp;1.3 Objective | 6 |
 | **CHAPTER 2: HARDWARE AND SOFTWARE REQUIREMENTS** | **7** |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.1 Technology Stack | 7 |
-| &nbsp;&nbsp;&nbsp;&nbsp;2.2 System Requirements | 9 |
-| **CHAPTER 3: FUNCTIONAL REQUIREMENTS** | **10** |
-| &nbsp;&nbsp;&nbsp;&nbsp;3.1 Teacher Agent Functions | 10 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.1 Pedagogical Curriculum Design | 10 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.2 Intent Classification | 10 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.3 5-Beat Learning Arc Generation | 10 |
-| &nbsp;&nbsp;&nbsp;&nbsp;3.2 Planner Agent Functions | 11 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.2.1 Animation Plan Generation | 11 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.2.2 5-Segment Video Structure | 11 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.2.3 Topic Visual Hints Integration | 11 |
-| &nbsp;&nbsp;&nbsp;&nbsp;3.3 Coder Agent Functions | 12 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.3.1 Manim Code Generation | 12 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.3.2 RAG-Enhanced API Retrieval | 12 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.3.3 Code Validation & Preventive Fixes | 12 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.3.4 Truncation Recovery | 13 |
-| &nbsp;&nbsp;&nbsp;&nbsp;3.4 Debugger Agent Functions | 13 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.4.1 Deterministic Runtime Fixes | 13 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.4.2 LLM-Assisted Debugging | 13 |
-| &nbsp;&nbsp;&nbsp;&nbsp;3.5 Voice Engine Functions | 14 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.5.1 Azure Speech Integration | 14 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.5.2 gTTS Fallback | 14 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.5.3 Voice-Text Synchronization | 14 |
-| &nbsp;&nbsp;&nbsp;&nbsp;3.6 Sandbox Functions | 15 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.6.1 Docker-Based Isolated Execution | 15 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.6.2 Failure Logging & Analysis | 15 |
-| &nbsp;&nbsp;&nbsp;&nbsp;3.7 User Interface Functions | 15 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.7.1 Plan Generation & Approval | 15 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.7.2 Video Generation & Preview | 16 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.7.3 Feedback Learning System | 16 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.7.4 Revision & Iteration | 16 |
-| **CHAPTER 4: NON-FUNCTIONAL REQUIREMENTS** | **17** |
-| &nbsp;&nbsp;&nbsp;&nbsp;4.1 Usability | 17 |
-| &nbsp;&nbsp;&nbsp;&nbsp;4.2 Reliability | 17 |
-| &nbsp;&nbsp;&nbsp;&nbsp;4.3 Performance | 17 |
-| &nbsp;&nbsp;&nbsp;&nbsp;4.4 Security | 17 |
-| &nbsp;&nbsp;&nbsp;&nbsp;4.5 Scalability | 17 |
-| &nbsp;&nbsp;&nbsp;&nbsp;4.6 Maintainability | 18 |
-| **CHAPTER 5: SYSTEM DESIGN** | **19** |
-| &nbsp;&nbsp;&nbsp;&nbsp;5.1 System Architecture Diagram | 19 |
-| &nbsp;&nbsp;&nbsp;&nbsp;5.2 Multi-Agent Pipeline Diagram | 20 |
-| &nbsp;&nbsp;&nbsp;&nbsp;5.3 Use-Case Diagrams | 21 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.3.1 User Use-Case Diagram | 21 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.3.2 System Use-Case Diagram | 22 |
-| &nbsp;&nbsp;&nbsp;&nbsp;5.4 Entity-Relationship Diagram | 23 |
-| &nbsp;&nbsp;&nbsp;&nbsp;5.5 Data Flow Diagram | 24 |
-| **CHAPTER 6: FUNCTIONAL FLOW CONTROL** | **25** |
-| &nbsp;&nbsp;&nbsp;&nbsp;6.1 Video Generation Flow | 25 |
-| &nbsp;&nbsp;&nbsp;&nbsp;6.2 Self-Healing Compilation Loop | 26 |
-| &nbsp;&nbsp;&nbsp;&nbsp;6.3 Revision Flow | 27 |
-| **CHAPTER 7: APPLICATION SCREENSHOTS** | **28** |
-| **CHAPTER 8: CONCLUSION** | **33** |
-| **CHAPTER 9: FUTURE SCOPE** | **34** |
-| **CHAPTER 10: LIMITATIONS** | **35** |
-| **CHAPTER 11: BIBLIOGRAPHY** | **36** |
+| &nbsp;&nbsp;&nbsp;&nbsp;2.2 System Requirements | 10 |
+| **CHAPTER 3: FUNCTIONAL REQUIREMENTS** | **11** |
+| &nbsp;&nbsp;&nbsp;&nbsp;3.1 Teacher Agent Functions | 11 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.1 Pedagogical Curriculum Design | 11 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.2 Intent Classification | 11 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.3 5-Beat Learning Arc Generation | 11 |
+| &nbsp;&nbsp;&nbsp;&nbsp;3.2 Planner Agent Functions | 12 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.2.1 Animation Plan Generation | 12 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.2.2 5-Segment Video Structure | 12 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.2.3 Topic Visual Hints Integration | 12 |
+| &nbsp;&nbsp;&nbsp;&nbsp;3.3 Coder Agent Functions | 13 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.3.1 Manim Code Generation | 13 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.3.2 RAG-Enhanced API Retrieval | 13 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.3.3 Code Validation & Preventive Fixes | 13 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.3.4 Truncation Recovery | 14 |
+| &nbsp;&nbsp;&nbsp;&nbsp;3.4 Debugger Agent Functions | 14 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.4.1 Deterministic Runtime Fixes | 14 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.4.2 LLM-Assisted Debugging | 14 |
+| &nbsp;&nbsp;&nbsp;&nbsp;3.5 Voice Engine Functions | 15 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.5.1 Azure Speech Integration | 15 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.5.2 gTTS Fallback | 15 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.5.3 Voice-Text Synchronization | 15 |
+| &nbsp;&nbsp;&nbsp;&nbsp;3.6 Sandbox Functions | 16 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.6.1 Docker-Based Isolated Execution | 16 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.6.2 Failure Logging & Analysis | 16 |
+| &nbsp;&nbsp;&nbsp;&nbsp;3.7 User Interface Functions | 16 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.7.1 User Authentication | 16 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.7.2 Plan Generation & Approval | 17 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.7.3 Video Generation & Real-Time Progress | 17 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.7.4 Community Gallery & Sharing | 17 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.7.5 Feedback Learning System | 17 |
+| &nbsp;&nbsp;&nbsp;&nbsp;3.8 Backend API Functions | 18 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.8.1 RESTful API (Express.js) | 18 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.8.2 Job Queue (BullMQ + Redis) | 18 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.8.3 Real-Time WebSocket (Socket.IO) | 18 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.8.4 CDN Video Delivery (Cloudinary) | 19 |
+| **CHAPTER 4: NON-FUNCTIONAL REQUIREMENTS** | **20** |
+| &nbsp;&nbsp;&nbsp;&nbsp;4.1 Usability | 20 |
+| &nbsp;&nbsp;&nbsp;&nbsp;4.2 Reliability | 20 |
+| &nbsp;&nbsp;&nbsp;&nbsp;4.3 Performance | 20 |
+| &nbsp;&nbsp;&nbsp;&nbsp;4.4 Security | 20 |
+| &nbsp;&nbsp;&nbsp;&nbsp;4.5 Scalability | 21 |
+| &nbsp;&nbsp;&nbsp;&nbsp;4.6 Maintainability | 21 |
+| **CHAPTER 5: SYSTEM DESIGN** | **22** |
+| &nbsp;&nbsp;&nbsp;&nbsp;5.1 System Architecture Diagram | 22 |
+| &nbsp;&nbsp;&nbsp;&nbsp;5.2 Multi-Agent Pipeline Diagram | 23 |
+| &nbsp;&nbsp;&nbsp;&nbsp;5.3 Use-Case Diagrams | 24 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.3.1 User Use-Case Diagram | 24 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.3.2 System Use-Case Diagram | 25 |
+| &nbsp;&nbsp;&nbsp;&nbsp;5.4 Entity-Relationship Diagram | 26 |
+| &nbsp;&nbsp;&nbsp;&nbsp;5.5 Data Flow Diagram | 27 |
+| **CHAPTER 6: FUNCTIONAL FLOW CONTROL** | **28** |
+| &nbsp;&nbsp;&nbsp;&nbsp;6.1 Video Generation Flow | 28 |
+| &nbsp;&nbsp;&nbsp;&nbsp;6.2 Self-Healing Compilation Loop | 29 |
+| &nbsp;&nbsp;&nbsp;&nbsp;6.3 Revision Flow | 30 |
+| **CHAPTER 7: APPLICATION SCREENSHOTS** | **31** |
+| **CHAPTER 8: CONCLUSION** | **36** |
+| **CHAPTER 9: FUTURE SCOPE** | **37** |
+| **CHAPTER 10: LIMITATIONS** | **38** |
+| **CHAPTER 11: BIBLIOGRAPHY** | **39** |
 
 ---
 
@@ -77,27 +83,27 @@
 
 We would like to express our sincere gratitude to everyone who contributed to the successful completion of the **AnimAI Studio** project.
 
-We extend our heartfelt thanks to our project guide and faculty members for their invaluable guidance, support, and encouragement throughout the development process. Their insights on multi-agent system design and educational technology were instrumental in shaping this project.
+We extend our heartfelt thanks to our project guide and faculty members for their invaluable guidance, support, and encouragement throughout the development process. Their insights on multi-agent system design, microservices architecture, and educational technology were instrumental in shaping this project.
 
-We are grateful to the open-source communities behind **Manim Community Edition**, **Google Gemini API**, **FAISS**, and **Streamlit** for providing the foundational tools that made this project possible.
+We are grateful to the open-source communities behind **React**, **Express.js**, **Manim Community Edition**, **Google Gemini API**, **FAISS**, **BullMQ**, **Socket.IO**, and **MongoDB/Mongoose** for providing the foundational tools that made this project possible.
 
-Special thanks to Microsoft Azure Speech Services for enabling high-quality voice narration capabilities, and to the Manim community for their comprehensive documentation and community support.
+Special thanks to **Cloudinary** for CDN-based video delivery, **Microsoft Azure Speech Services** for enabling high-quality voice narration capabilities, and to the Manim community for their comprehensive documentation and community support.
 
-Finally, we thank our institution for providing the resources, infrastructure, and academic environment that enabled us to pursue this interdisciplinary project combining Artificial Intelligence, Computer Graphics, and Educational Technology.
+Finally, we thank our institution for providing the resources, infrastructure, and academic environment that enabled us to pursue this interdisciplinary project combining Artificial Intelligence, Full-Stack Web Development, Computer Graphics, and Educational Technology.
 
 ---
 
 ## ABSTRACT
 
-**AnimAI Studio** is an AI-powered multi-agent system that transforms natural language descriptions into fully narrated, professional educational animations. The system leverages the Google Gemini large language model (LLM) for intelligent content generation, the Manim mathematical animation library for visual rendering, and Azure Speech / gTTS for voice narration.
+**AnimAI Studio** is a full-stack, AI-powered multi-agent platform that transforms natural language descriptions into fully narrated, professional educational animations. The system is built on a **microservices architecture** comprising a **React (Vite)** frontend, a **Node.js (Express.js)** API server, and a **Python (FastAPI)** AI microservice. It leverages the Google Gemini large language model (LLM) for intelligent content generation, the Manim mathematical animation library for visual rendering, Azure Speech / gTTS for voice narration, **MongoDB** for persistent data storage, **Redis + BullMQ** for asynchronous job queuing, **Socket.IO** for real-time progress updates, and **Cloudinary CDN** for video delivery.
 
 The core innovation lies in the **five-agent pipeline architecture**: a **Teacher Agent** designs the pedagogical curriculum, a **Planner Agent** converts it into a 5-segment video storyboard, a **Coder Agent** generates executable Manim Python code enhanced by Retrieval-Augmented Generation (RAG), a **Debugger Agent** automatically detects and repairs compilation failures, and a **Voice Engine** renders synchronized speech narration directly inside the animation.
 
-The system includes a **self-healing compilation loop** that retries failed code through deterministic fixes and LLM-assisted debugging (up to 3 attempts), a **Docker-based sandboxed execution environment** for secure code isolation, a **feedback learning system** that improves generation quality over time through user-approved examples, and a **Streamlit web interface** for interactive plan approval and video preview.
+The system includes a **self-healing compilation loop** that retries failed code through deterministic fixes and LLM-assisted debugging (up to 3 attempts), a **Docker-based sandboxed execution environment** for secure code isolation, a **feedback learning system** that improves generation quality over time through user-approved examples, **JWT-based user authentication** with protected routes, **real-time WebSocket progress tracking** during video generation, a **community gallery** for sharing animations publicly, and a modern **React SPA** with client-side routing for interactive plan approval and video preview.
 
 AnimAI Studio addresses the critical bottleneck in educational content creation — producing high-quality animated explanations typically requires hours of manual coding and video editing. This system automates the entire pipeline, enabling educators and students to generate professional pedagogical videos in minutes by simply describing the topic in plain English.
 
-**Keywords:** Multi-Agent Systems, Large Language Models, Educational Animation, Manim, Retrieval-Augmented Generation, Text-to-Speech, Self-Healing Code Generation, Docker Sandboxing
+**Keywords:** Multi-Agent Systems, Large Language Models, Educational Animation, Manim, Retrieval-Augmented Generation, Text-to-Speech, Self-Healing Code Generation, Microservices, React, Express.js, FastAPI, BullMQ, Socket.IO, MongoDB, Cloudinary CDN
 
 ---
 
@@ -150,23 +156,47 @@ The primary objective of AnimAI Studio is to build an end-to-end automated syste
 
 ### 2.1 Technology Stack
 
-#### 2.1.1 Core Language & Framework
+#### 2.1.1 Frontend
 
 | Technology | Version | Purpose |
 |-----------|---------|---------|
-| Python | 3.10+ | Primary development language |
-| Streamlit | ≥ 1.28.0 | Web-based user interface |
+| React | 19.x | Component-based UI library |
+| Vite | 8.x | Build tool and dev server with HMR |
+| React Router | 7.x | Client-side SPA routing |
+| Axios | 1.x | HTTP client with interceptors (JWT auto-attach) |
+| Socket.IO Client | 4.x | Real-time WebSocket for live progress |
 
-#### 2.1.2 AI & Machine Learning
+#### 2.1.2 Backend API Server
 
 | Technology | Version | Purpose |
 |-----------|---------|---------|
-| Google Gemini API (`google-genai`) | ≥ 1.0.0 | Large Language Model for all agents (Teacher, Planner, Coder, Debugger) |
+| Node.js | 18+ | JavaScript runtime for API server |
+| Express.js | 5.x | HTTP framework for RESTful API |
+| Mongoose | 9.x | MongoDB ODM for data modeling |
+| BullMQ | 5.x | Redis-backed job queue for async video generation |
+| IORedis | 5.x | Redis client for BullMQ |
+| Socket.IO | 4.x | Real-time WebSocket server (progress events) |
+| JSON Web Token (jsonwebtoken) | 9.x | JWT-based stateless authentication |
+| bcryptjs | 3.x | Password hashing (bcrypt algorithm) |
+| Joi | 18.x | Request validation schemas |
+| Helmet | 8.x | Security HTTP headers (XSS, clickjacking prevention) |
+| Morgan | 1.x | HTTP request logging |
+| Cloudinary | 2.x | CDN-based video upload, storage, and delivery |
+
+#### 2.1.3 AI Microservice (Python)
+
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| Python | 3.10+ | AI pipeline language |
+| FastAPI | ≥ 0.115.0 | HTTP wrapper exposing AI pipeline as REST endpoints |
+| Uvicorn | ≥ 0.30.0 | ASGI server for FastAPI |
+| Pydantic | ≥ 2.5.0 | Request/response validation models |
+| Google Gemini API (`google-genai`) | ≥ 1.0.0 | LLM for all agents (Teacher, Planner, Coder, Debugger) |
 | FAISS (`faiss-cpu`) | ≥ 1.7.4 | Vector similarity search for RAG retrieval |
 | Sentence Transformers | ≥ 2.2.2 | Text embedding model (`all-MiniLM-L6-v2`) for RAG indexing |
 | NumPy | ≥ 1.24.0 | Numerical operations for embedding vectors |
 
-#### 2.1.3 Animation & Rendering
+#### 2.1.4 Animation & Rendering
 
 | Technology | Version | Purpose |
 |-----------|---------|---------|
@@ -174,39 +204,59 @@ The primary objective of AnimAI Studio is to build an end-to-end automated syste
 | Manim Voiceover | ≥ 0.3.7 | Voice narration integration inside Manim scenes |
 | FFmpeg | Latest | Video/audio encoding and merging |
 
-#### 2.1.4 Text-to-Speech (TTS)
+#### 2.1.5 Text-to-Speech (TTS)
 
 | Technology | Version | Purpose |
 |-----------|---------|---------|
 | Azure Cognitive Services Speech | ≥ 1.42.0 | Primary high-quality TTS provider |
 | gTTS (Google Text-to-Speech) | ≥ 2.3.0 | Fallback TTS provider |
 
-#### 2.1.5 Infrastructure
+#### 2.1.6 Infrastructure & Database
 
 | Technology | Version | Purpose |
 |-----------|---------|---------|
-| Docker | Latest | Sandboxed code execution environment |
+| MongoDB Atlas | Latest | Cloud-hosted NoSQL database |
+| Redis | 7.x (Alpine) | In-memory store for BullMQ job queue |
+| Docker / Docker Compose | Latest | Multi-container orchestration |
 | `manimcommunity/manim:stable` | Latest | Base Docker image for rendering |
-| python-dotenv | ≥ 1.0.0 | Environment variable management |
+| Cloudinary CDN | Latest | Video storage, transcoding, and edge delivery |
 
-#### 2.1.6 Architecture Diagram — Technology Stack
+#### 2.1.7 Architecture Diagram — Technology Stack
 
 ```mermaid
 flowchart TD
     subgraph FL["🖥️ FRONTEND LAYER"]
         direction LR
-        UI["**Streamlit Web UI**"]
+        UI["**React SPA** (Vite)"]
         subgraph UI_FEATURES[" "]
             direction LR
-            F1["Plan Approval"]
-            F2["Video Preview"]
-            F3["Feedback Controls"]
+            F1["Auth (JWT)"]
+            F2["Studio"]
+            F3["Gallery"]
+            F4["Explore"]
         end
         UI --- UI_FEATURES
     end
 
-    subgraph AOL["⚙️ AGENT ORCHESTRATION LAYER"]
+    subgraph BL["⚡ BACKEND LAYER"]
         direction TB
+        API["**Express.js API** (Node.js)"]
+        subgraph SERVICES[" "]
+            direction LR
+            S1["BullMQ\nJob Queue"]
+            S2["Socket.IO\nWebSocket"]
+            S3["Cloudinary\nCDN Upload"]
+        end
+        API --- SERVICES
+        DB["MongoDB Atlas"]
+        RD["Redis 7"]
+        API --> DB
+        S1 --> RD
+    end
+
+    subgraph AL["🤖 AI SERVICE LAYER"]
+        direction TB
+        FAST["**FastAPI** (Python)"]
         subgraph AGENTS[" "]
             direction LR
             AG1["Teacher\nAgent"]
@@ -220,6 +270,7 @@ flowchart TD
             RAG1["FAISS Vector Index"]
             RAG2["Sentence Transformer\nEmbeddings"]
         end
+        FAST --- AGENTS
         AG3 -.->|retrieves API patterns| RAG_BOX
     end
 
@@ -233,13 +284,19 @@ flowchart TD
         end
     end
 
-    FL -->|user request + plan approval| AOL
-    AOL -->|generated Manim code| EXL
+    FL -->|REST + WebSocket| BL
+    BL -->|HTTP bridge| AL
+    AL -->|generated Manim code| EXL
 
     style FL fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
-    style AOL fill:#dcfce7,stroke:#22c55e,color:#14532d
+    style BL fill:#fef9c3,stroke:#eab308,color:#713f12
+    style AL fill:#dcfce7,stroke:#22c55e,color:#14532d
     style EXL fill:#fce7f3,stroke:#ec4899,color:#831843
     style UI fill:#3b82f6,color:#fff,stroke:#2563eb
+    style API fill:#eab308,color:#fff,stroke:#ca8a04
+    style FAST fill:#22c55e,color:#fff,stroke:#16a34a
+    style DB fill:#fef9c3,stroke:#eab308,color:#713f12
+    style RD fill:#fef9c3,stroke:#eab308,color:#713f12
     style AG1 fill:#34d399,color:#fff,stroke:#059669
     style AG2 fill:#34d399,color:#fff,stroke:#059669
     style AG3 fill:#f97316,color:#fff,stroke:#ea580c
@@ -254,6 +311,10 @@ flowchart TD
     style F1 fill:#93c5fd,color:#1e3a5f,stroke:#3b82f6
     style F2 fill:#93c5fd,color:#1e3a5f,stroke:#3b82f6
     style F3 fill:#93c5fd,color:#1e3a5f,stroke:#3b82f6
+    style F4 fill:#93c5fd,color:#1e3a5f,stroke:#3b82f6
+    style S1 fill:#fde68a,color:#713f12,stroke:#eab308
+    style S2 fill:#fde68a,color:#713f12,stroke:#eab308
+    style S3 fill:#fde68a,color:#713f12,stroke:#eab308
 ```
 
 ### 2.2 System Requirements
@@ -273,9 +334,12 @@ flowchart TD
 | Software | Requirement |
 |----------|-------------|
 | Operating System | Windows 10/11, macOS 12+, or Ubuntu 20.04+ |
+| Node.js | 18.x or higher |
 | Python | 3.10 or higher |
 | Docker Desktop | Latest version with WSL2 backend (Windows) |
-| Web Browser | Chrome, Firefox, or Edge (for Streamlit UI) |
+| Redis | 7.x (via Docker or local install) |
+| MongoDB | Atlas (cloud) or local 7.x |
+| Web Browser | Chrome, Firefox, or Edge (for React frontend) |
 | Git | For version control |
 
 #### 2.2.3 API Keys & Credentials
@@ -283,6 +347,11 @@ flowchart TD
 | Service | Required | Purpose |
 |---------|----------|---------|
 | Google Gemini API Key (`GEMINI_API_KEY`) | **Yes** | All LLM operations |
+| MongoDB Connection URI (`MONGO_URI`) | **Yes** | Database connection string |
+| JWT Secret (`JWT_SECRET`) | **Yes** | Token signing for authentication |
+| Cloudinary Cloud Name (`CLOUDINARY_CLOUD_NAME`) | **Yes** | CDN video upload |
+| Cloudinary API Key (`CLOUDINARY_API_KEY`) | **Yes** | CDN authentication |
+| Cloudinary API Secret (`CLOUDINARY_API_SECRET`) | **Yes** | CDN authentication |
 | Azure Speech Key (`AZURE_SUBSCRIPTION_KEY`) | Optional | High-quality TTS |
 | Azure Speech Region (`AZURE_SERVICE_REGION`) | Optional | Azure TTS region endpoint |
 
@@ -483,34 +552,95 @@ Every compilation failure is logged with:
 - **Tag extraction** — Automatic categorization (bookmark, TypeError, timeout, etc.).
 - **CLI Viewer** — `failure_log_viewer.py` provides summary, tag frequency, and bundle inspection.
 
-### 3.7 User Interface Functions
+### 3.7 User Interface Functions (React SPA)
 
-#### 3.7.1 Plan Generation & Approval
+The frontend is a React Single-Page Application built with Vite, using React Router for client-side navigation and Axios for API communication.
 
-- User enters a topic or question in the Streamlit text input.
-- System generates a structured animation plan.
-- Plan is displayed as an editable JSON for review.
-- User can approve, modify, or regenerate the plan.
+#### 3.7.1 User Authentication
 
-#### 3.7.2 Video Generation & Preview
+- **Register** — Username, email, and password registration with bcrypt hashing.
+- **Login** — Email/password authentication returning a JWT token stored in `localStorage`.
+- **Protected Routes** — `ProtectedRoute` wrapper redirects unauthenticated users to `/auth`.
+- **Auto-Logout** — Axios response interceptor catches 401 errors and clears expired tokens.
 
-- After plan approval, the system generates Manim code and compiles it.
-- Progress is shown via a Streamlit progress bar with status messages.
-- Generated video is displayed in an embedded player.
-- Code is shown in an expandable section for inspection.
+#### 3.7.2 Plan Generation & Approval
 
-#### 3.7.3 Feedback Learning System
+- User enters a topic on the Home page, which creates an Animation document via `POST /api/animations`.
+- Navigates to the Studio page (`/studio/:id`) where they click "Generate Plan".
+- The Express API calls the Python FastAPI `/plan` endpoint.
+- Plan is displayed with title, visual style, duration, steps, and teacher explanation.
+- User can approve the plan (saves to MongoDB with status `approved`) or regenerate.
 
-- Users can give thumbs-up to successful animations.
+#### 3.7.3 Video Generation & Real-Time Progress
+
+- After plan approval, clicking "Generate Video" queues a BullMQ job via `POST /api/animations/generate`.
+- The API returns a `jobId` immediately (non-blocking).
+- **Socket.IO** pushes real-time progress events: `planning → coding → compiling → uploading → complete`.
+- A `ProgressTracker` component displays animated stage indicators and progress bar.
+- **Polling fallback** — If WebSocket disconnects, the client falls back to HTTP polling via `GET /api/animations/jobs/:jobId`.
+- On completion, the video player loads the Cloudinary CDN URL.
+
+#### 3.7.4 Community Gallery & Sharing
+
+- **My Gallery** (`/gallery`) — Lists the authenticated user's animations (paginated, newest first).
+- **Explore** (`/explore`) — Public gallery showing community-shared animations (no auth required).
+- **Share Toggle** — Users can make their animations public/private via `PATCH /api/animations/:id/share`.
+- **AnimationCard** component displays thumbnail, prompt, and status badge.
+
+#### 3.7.5 Feedback Learning System
+
+- Users can give thumbs-up/down votes on animations via `POST /api/feedback`.
+- Compound unique index on `(animationId, userId)` prevents duplicate votes.
 - Approved code is saved as a few-shot example for future generations.
-- Examples are categorized by visual style (diagram, graph, flowchart).
 - Highest-rated examples are injected into future Coder prompts.
 
-#### 3.7.4 Revision & Iteration
+### 3.8 Backend API Functions
 
-- Users can request changes to existing animations.
-- The Coder Agent applies surgical modifications while preserving working code.
-- Revised code goes through the same compilation + debug loop.
+#### 3.8.1 RESTful API (Express.js)
+
+The Node.js Express server provides a full REST API with JWT authentication:
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/auth/register` | No | Create new user account |
+| `POST` | `/api/auth/login` | No | Authenticate and receive JWT |
+| `GET` | `/api/auth/me` | Yes | Validate token and return user |
+| `POST` | `/api/animations` | Yes | Create animation with prompt |
+| `GET` | `/api/animations` | Yes | List user's animations (paginated) |
+| `GET` | `/api/animations/:id` | Yes | Get single animation details |
+| `PUT` | `/api/animations/:id` | Yes | Update plan / approve |
+| `DELETE` | `/api/animations/:id` | Yes | Delete animation + Cloudinary asset |
+| `POST` | `/api/animations/:id/plan` | Yes | Generate plan via Python AI |
+| `POST` | `/api/animations/generate` | Yes | Queue video generation job |
+| `GET` | `/api/animations/jobs/:jobId` | Yes | Poll job status |
+| `PATCH` | `/api/animations/:id/share` | Yes | Toggle public/private |
+| `GET` | `/api/gallery` | No | Public gallery (community) |
+| `POST` | `/api/feedback` | Yes | Submit vote on animation |
+
+Middleware stack: `Helmet` → `CORS` → `Morgan` → `express.json()` → `Routes` → `errorHandler`.
+
+#### 3.8.2 Job Queue (BullMQ + Redis)
+
+- **Queue Name:** `video-generation`
+- **Backed by:** Redis 7 (Alpine) with persistent volumes.
+- **Job Lifecycle:** User request → `videoQueue.add()` → Worker picks up → Calls Python pipeline → Uploads to Cloudinary → Saves to MongoDB → Emits Socket.IO completion.
+- **Retry Policy:** 2 attempts with exponential backoff (5s base delay).
+- **Concurrency:** 2 workers process jobs simultaneously.
+- **Job Cleanup:** Completed jobs retained (100 max), failed jobs retained (50 max).
+
+#### 3.8.3 Real-Time WebSocket (Socket.IO)
+
+- **Authentication:** Socket.IO middleware validates JWT from `socket.handshake.auth.token`.
+- **Room Strategy:** Each user joins room `user:<userId>`. Events are scoped per user — User A never sees User B's progress.
+- **Progress Stages:** `planning (10%) → coding (20%) → compiling (50%) → uploading (80%) → complete (100%)`.
+- **Events Emitted:** `job:progress`, `job:complete`, `job:failed`, `job:retrying`.
+
+#### 3.8.4 CDN Video Delivery (Cloudinary)
+
+- Videos are uploaded to Cloudinary after successful Manim rendering.
+- Auto-generates thumbnails (640×360 JPG) for gallery display.
+- If Cloudinary upload fails, falls back to local Express static serving (`/api/videos/`).
+- Videos are organized in `animai/videos/` folder with `animationId` as public ID.
 
 ---
 
@@ -520,32 +650,45 @@ Every compilation failure is logged with:
 
 - **Natural Language Input** — Users describe topics in plain English; no coding knowledge required.
 - **Interactive Plan Review** — Users can approve, modify, or regenerate animation plans.
-- **Streamlit Web UI** — Clean, intuitive browser-based interface accessible on any device.
+- **Modern React SPA** — Fast, responsive single-page application with client-side routing.
 - **One-Click Generation** — Single button click from approved plan to final video.
+- **Real-Time Feedback** — Live progress bar via Socket.IO WebSocket during generation.
 
 ### 4.2 Reliability
 
 - **Self-Healing Pipeline** — Automatic retry up to 3 attempts with deterministic + LLM fixes.
 - **TTS Failover** — Azure → gTTS automatic fallback ensures voice always works.
+- **BullMQ Job Retry** — Queue-level retry (2 attempts, exponential backoff) on top of pipeline-level retries.
+- **WebSocket Fallback** — Automatic HTTP polling when Socket.IO disconnects.
+- **CDN Fallback** — Local Express static serving when Cloudinary upload fails.
 - **Graceful Degradation** — Individual component failures (RAG, feedback) don't crash the pipeline.
 - **Failure Logging** — Every failure is persisted for post-hoc analysis and system improvement.
 
 ### 4.3 Performance
 
 - **End-to-End Time** — Typical video generation: 2-5 minutes (including LLM calls and rendering).
+- **Non-Blocking API** — Video generation is queued (BullMQ), API responds instantly with `jobId`.
 - **Token Efficiency** — Deterministic fixes eliminate unnecessary LLM calls for known errors.
+- **CDN Delivery** — Videos served from Cloudinary edge network, offloading bandwidth from the server.
 - **RAG Retrieval** — Sub-second FAISS vector search for API pattern matching.
 - **Caching** — RAG index and embedding model loaded once at startup.
 
 ### 4.4 Security
 
+- **JWT Authentication** — Stateless token-based auth; tokens expire after 7 days.
+- **Password Hashing** — bcrypt algorithm with automatic salting.
+- **Ownership Enforcement** — Every database query filters by `userId`; users can only access their own data.
 - **Docker Sandboxing** — AI-generated code executes in isolated containers with no host access.
-- **No Filesystem Operations** — Generated code cannot read/write host files.
+- **Security Headers** — Helmet middleware prevents XSS, clickjacking, and MIME sniffing.
+- **CORS Policy** — Configured to accept requests only from the React frontend origin.
 - **API Key Management** — Credentials stored in `.env` files, never hardcoded.
-- **Input Sanitization** — User queries are sanitized before injection into LLM prompts.
+- **Input Validation** — Joi schemas validate all request bodies before processing.
 
 ### 4.5 Scalability
 
+- **Microservices Architecture** — React, Express, FastAPI, and Manim run as independent services.
+- **Docker Compose Orchestration** — All services defined in a single `docker-compose.yml`.
+- **BullMQ Concurrency** — Worker concurrency is configurable (default: 2 parallel jobs).
 - **Model-Agnostic Architecture** — System discovers available Gemini models dynamically.
 - **Fallback Chain** — Automatic model fallback: preferred → gemini-2.5-flash → gemini-2.5-flash-lite.
 - **Pluggable TTS** — New TTS providers can be added without modifying the core pipeline.
@@ -553,8 +696,8 @@ Every compilation failure is logged with:
 
 ### 4.6 Maintainability
 
-- **Modular Architecture** — Each agent is a standalone Python module with clear interfaces.
-- **Comprehensive Logging** — Every pipeline stage prints tagged status messages.
+- **Modular Architecture** — Each layer (client, server, ai-service, agent, sandbox, rag) has clear boundaries.
+- **Comprehensive Logging** — Morgan HTTP logs, tagged pipeline status messages, BullMQ worker logs.
 - **Failure Analytics** — CLI viewer for failure log analysis with tag frequency and filtering.
 - **Code Validators** — 11 automated validators catch common issues before compilation.
 
@@ -567,30 +710,34 @@ Every compilation failure is logged with:
 ```mermaid
 flowchart TD
     subgraph UL[" 🖥️  USER LAYER "]
-        UI["**Streamlit Web UI** *(app.py)*"]
+        UI["**React SPA** *(Vite + React Router)*"]
         subgraph UI_INNER[" "]
             direction LR
-            A1[Topic Input]
-            A2[Plan Viewer & Editor]
-            A3[Video Player & Feedback Controls]
+            A1[Auth Page]
+            A2[Studio Page]
+            A3[Gallery / Explore]
         end
         UI --- UI_INNER
     end
 
-    subgraph OL[" ⚙️  ORCHESTRATION LAYER "]
-        ORC["**Orchestrator** *(orchestrator.py)*"]
-        subgraph ORC_INNER[" "]
+    subgraph BL[" ⚡  API LAYER "]
+        API["**Express.js API** *(server/src/index.js)*"]
+        subgraph API_INNER[" "]
             direction LR
-            O1["build_plan()"] --> O2["run_agent_with_plan()"] --> O3["apply_changes()"]
-            O1 --- TP[Teacher + Planner]
-            O2 --- CD[Compile + Debug Loop]
-            O3 --- RL[Revise Loop]
+            B1["REST Routes"] --> B2["BullMQ Queue"]
+            B2 --> B3["Socket.IO Progress"]
         end
-        ORC --- ORC_INNER
+        API --- API_INNER
+        DB["MongoDB Atlas"]
+        RD["Redis 7"]
+        CLD["Cloudinary CDN"]
+        API --> DB
+        B2 --> RD
+        B3 --> CLD
     end
 
-    subgraph AL[" 🤖  AGENT LAYER "]
-        direction TB
+    subgraph PL[" 🤖  AI SERVICE LAYER "]
+        FAST["**FastAPI** *(ai-service/main.py)*"]
         subgraph AGENTS[" "]
             direction LR
             AG1["Teacher Agent<br/>Pedagogy Design"]
@@ -600,6 +747,7 @@ flowchart TD
         end
         LLM["Gemini LLM API - llm.py<br/>Model Discovery → Fallback → Response Parse"]
         RAG["RAG Engine - rag/retriever.py<br/>FAISS Index + Sentence Transformer + Manim Doc Chunks"]
+        FAST --- AGENTS
         AGENTS --> LLM --> RAG
     end
 
@@ -613,16 +761,19 @@ flowchart TD
         FL["Failure Logger - agent/failure_logger.py<br/>JSON Bundles + JSONL Index + Legacy Flat Files"]
     end
 
-    UL -->|user request| OL
-    OL -->|orchestrated plan| AL
-    AL -->|generated code| EL
+    UL -->|REST + WebSocket| BL
+    BL -->|HTTP bridge| PL
+    PL -->|generated code| EL
 
     style UL fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
-    style OL fill:#dcfce7,stroke:#22c55e,color:#14532d
-    style AL fill:#fef9c3,stroke:#eab308,color:#713f12
+    style BL fill:#fef9c3,stroke:#eab308,color:#713f12
+    style PL fill:#dcfce7,stroke:#22c55e,color:#14532d
     style EL fill:#fce7f3,stroke:#ec4899,color:#831843
     style LLM fill:#ffffff,stroke:#6b7280
     style RAG fill:#ffffff,stroke:#6b7280
+    style DB fill:#fef9c3,stroke:#eab308,color:#713f12
+    style RD fill:#fef9c3,stroke:#eab308,color:#713f12
+    style CLD fill:#fef9c3,stroke:#eab308,color:#713f12
 ```
 
 
@@ -687,14 +838,16 @@ flowchart LR
 
     subgraph SYS[" AnimAI Studio "]
         direction TB
+        UC0(["Register / Login"])
         UC1(["Enter Topic / Question"])
         UC2(["Review & Approve Plan"])
         UC3(["View Generated Video"])
         UC4(["Provide Feedback"])
-        UC5(["Request Revisions"])
-        UC6(["Download Video"])
+        UC5(["Share to Gallery"])
+        UC6(["Explore Community Gallery"])
     end
 
+    USER --- UC0
     USER --- UC1
     USER --- UC2
     USER --- UC3
@@ -704,6 +857,7 @@ flowchart LR
 
     style SYS fill:#f8fafc,stroke:#334155,color:#0f172a
     style USER fill:#3b82f6,color:#fff,stroke:#1d4ed8
+    style UC0 fill:#dbeafe,stroke:#93c5fd,color:#1e3a5f
     style UC1 fill:#dbeafe,stroke:#93c5fd,color:#1e3a5f
     style UC2 fill:#dbeafe,stroke:#93c5fd,color:#1e3a5f
     style UC3 fill:#dbeafe,stroke:#93c5fd,color:#1e3a5f
@@ -718,15 +872,18 @@ flowchart LR
 flowchart LR
     subgraph SYS[" AnimAI Studio "]
         direction TB
+        UC_A(["Authenticate User (JWT)"])
         UC_T(["Generate Curriculum (Teach)"])
         UC_P(["Generate Plan (Plan)"])
         UC_C(["Generate Code (Code)"])
         UC_D(["Debug Code (Debug)"])
         UC_R(["Retrieve API Patterns (RAG)"])
+        UC_Q(["Queue Job (BullMQ)"])
         UC_S(["Compile in Docker Sandbox"])
         UC_V(["Synthesize Voice (TTS)"])
+        UC_U(["Upload to CDN"])
         UC_L(["Log Failures for Analysis"])
-        UC_F(["Store Feedback Examples"])
+        UC_F(["Store Feedback"])
     end
 
     GEMINI["☁️ Gemini LLM API"] --- UC_T
@@ -736,49 +893,63 @@ flowchart LR
     FAISS["🗄️ FAISS Index"] --- UC_R
     DOCKER["🐳 Docker Engine"] --- UC_S
     TTS["🔊 Azure / gTTS"] --- UC_V
+    MONGO["🗄️ MongoDB Atlas"] --- UC_A
+    MONGO --- UC_F
+    REDIS["⚡ Redis"] --- UC_Q
+    CLOUD["☁️ Cloudinary CDN"] --- UC_U
 
     style SYS fill:#f8fafc,stroke:#334155,color:#0f172a
     style GEMINI fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     style FAISS fill:#fef9c3,stroke:#eab308,color:#713f12
     style DOCKER fill:#dcfce7,stroke:#22c55e,color:#14532d
     style TTS fill:#fce7f3,stroke:#ec4899,color:#831843
+    style MONGO fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    style REDIS fill:#fef9c3,stroke:#eab308,color:#713f12
+    style CLOUD fill:#fce7f3,stroke:#ec4899,color:#831843
 ```
 
 ### 5.4 Entity-Relationship Diagram
 
 ```mermaid
 erDiagram
-    USER_QUERY {
-        string query_text
-        string intent_type
-        string timestamp
+    USER {
+        ObjectId _id
+        string email
+        string username
+        string passwordHash
+        string defaultTtsProvider
+        string preferredVisualStyle
+        datetime createdAt
+        datetime updatedAt
     }
-    ANIMATION_PLAN {
-        string title
-        string visual_style
-        string visual_metaphor
-        int duration_seconds
-        string pedagogical_arc
-        string emotional_beats
+    ANIMATION {
+        ObjectId _id
+        ObjectId userId FK
+        string prompt
+        string intent
+        mixed plan
+        mixed teacherExplanation
+        string generatedCode
+        string videoUrl
+        string videoPublicId
+        string thumbnailUrl
+        number videoDuration
+        number videoSizeBytes
+        string status
+        int attempts
+        boolean hasAudio
+        boolean isPublic
+        string error
+        datetime createdAt
+        datetime updatedAt
     }
-    SEGMENT {
-        string type
-        int duration_seconds
-        string visual_focus
-        string emotional_target
-    }
-    STEP {
-        string description
-        string voiceover_text
-        string key_text
-        string animation_type
-    }
-    GENERATED_CODE {
-        string code_content
-        int code_lines
-        string query
-        string plan_reference
-        int attempt_number
+    FEEDBACK {
+        ObjectId _id
+        ObjectId animationId FK
+        ObjectId userId FK
+        string vote
+        string comment
+        datetime createdAt
     }
     FAILURE_LOG {
         string id
@@ -788,22 +959,11 @@ erDiagram
         string tags
         int attempt
     }
-    FEEDBACK_EXAMPLE {
-        string query
-        string code
-        string category
-        string plan
-        int upvotes
-        string timestamp
-    }
 
-    USER_QUERY ||--|| ANIMATION_PLAN : generates
-    ANIMATION_PLAN ||--|{ SEGMENT : contains
-    SEGMENT ||--|{ STEP : has
-    USER_QUERY ||--|{ GENERATED_CODE : prompts
-    ANIMATION_PLAN ||--|{ GENERATED_CODE : implements
-    GENERATED_CODE ||--o{ FAILURE_LOG : logs
-    GENERATED_CODE ||--o| FEEDBACK_EXAMPLE : promoted_to
+    USER ||--|{ ANIMATION : creates
+    USER ||--|{ FEEDBACK : submits
+    ANIMATION ||--o{ FEEDBACK : receives
+    ANIMATION ||--o{ FAILURE_LOG : logs
 ```
 
 ### 5.5 Data Flow Diagram
@@ -814,7 +974,7 @@ erDiagram
 flowchart LR
     USER(["👤 User"])
     SYS["🎬 AnimAI Studio"]
-    EXT["☁️ External APIs<br/>Gemini · TTS · Docker"]
+    EXT["☁️ External Services<br/>Gemini · TTS · MongoDB<br/>Redis · Cloudinary · Docker"]
 
     USER -->|topic / question| SYS
     SYS -->|narrated MP4 video| USER
@@ -1000,90 +1160,115 @@ flowchart TD
 
 > **Note:** Screenshots should be captured from a running instance of the application. Below are descriptions of the key screens that should be included:
 
-### Screenshot 1: Landing Page
-The Streamlit interface showing the AnimAI Studio title, sidebar with generation history, and the main topic input area. The interface features a dark-themed design with the project branding.
+### Screenshot 1: Authentication Page
+The Auth page (`/auth`) showing the login/register toggle form with:
+- Email and password fields (login mode)
+- Username, email, and password fields (register mode)
+- Dark-themed card design with AnimAI Studio branding
+- Form validation error messages
 
-### Screenshot 2: Topic Input
-User entering a topic (e.g., "Gradient Descent") in the text input field. The interface shows the "Generate Plan" button and any existing session history in the sidebar.
+### Screenshot 2: Home Page — Topic Input
+The Home page (`/`) showing:
+- Topic input field with placeholder text
+- "Create Animation" button
+- List of recent animations (AnimationCards) with status badges
+- Navbar with navigation links (Home, Gallery, Explore, Logout)
 
-### Screenshot 3: Plan Generation
-The generated animation plan displayed as structured content showing:
-- Video title and visual style
-- 5 segments with types and durations
-- Pedagogical arc (hook → aha moment → reinforce)
-- "Approve Plan" and "Regenerate" buttons
+### Screenshot 3: Studio — Plan Generation
+The Studio page (`/studio/:id`) after clicking "Generate Plan":
+- AI-generated plan card showing title, visual style, duration, steps
+- Teacher's Explanation section (core idea, analogy, takeaway)
+- "Approve Plan & Generate Video" button
+- "Re-plan" button for regeneration
 
-### Screenshot 4: Video Generation Progress
-The progress bar showing the pipeline stages:
-- "Generating Manim code..."
-- "Compiling in Docker sandbox..."
-- "Attempt 1/3..."
-- Real-time status updates from the orchestrator
+### Screenshot 4: Studio — Real-Time Progress
+The Studio page during video generation showing:
+- ProgressTracker component with animated stage indicators
+- Stages: Planning → Coding → Compiling → Uploading → Complete
+- Progress bar with percentage
+- Live status message (e.g., "AI writing scene structure...")
+- WebSocket connection indicator
 
-### Screenshot 5: Generated Video Preview
-The completed video displayed in Streamlit's embedded video player with:
-- Playback controls (play, pause, seek)
-- Video metadata (duration, resolution)
-- Expandable code section showing the generated Manim code
-- Thumbs-up button for feedback
+### Screenshot 5: Studio — Generated Video
+The Studio page after successful generation:
+- Embedded video player with Cloudinary CDN URL
+- Video stats: Duration, Size (MB), Attempts, Audio indicator
+- "Re-generate" button
+- Status badge showing "success"
 
-### Screenshot 6: Generated Animation Frame — Introduction Segment
+### Screenshot 6: My Gallery
+The Gallery page (`/gallery`) showing:
+- Grid of AnimationCard components
+- Each card displays: prompt text, status badge, thumbnail
+- Pagination controls
+
+### Screenshot 7: Explore — Community Gallery
+The Explore page (`/explore`) showing:
+- Publicly shared animations from all users
+- Each card shows: prompt, creator username, video thumbnail
+- No authentication required to browse
+
+### Screenshot 8: Generated Animation Frame — Introduction Segment
 A frame from the rendered video showing:
 - Topic title with underline
 - Definition text
 - Dark background (#0F0F1A)
 - Clean typography
 
-### Screenshot 7: Generated Animation Frame — Theory & Analogy
+### Screenshot 9: Generated Animation Frame — Theory & Analogy
 A frame showing the split-screen layout:
 - LEFT column: Theory points
 - RIGHT column: Real-world analogy
 - Divider line between columns
 - Color-coded headers
 
-### Screenshot 8: Generated Animation Frame — Core Animation
+### Screenshot 10: Generated Animation Frame — Core Animation
 A frame showing the main visual demonstration:
 - Mathematical diagrams or flowcharts
 - Animated elements (arrows, highlights)
 - Key text panel on the right
 - "AHA moment" visual
 
-### Screenshot 9: Generated Animation Frame — Summary Banner
+### Screenshot 11: Generated Animation Frame — Summary Banner
 A frame showing the closing summary:
 - Green (#0A2A0A) rounded rectangle banner
 - Key takeaway text in white
 - Final wait screen
 
-### Screenshot 10: Failure Log Viewer
-Terminal output of `failure_log_viewer.py` showing:
-- Failure summary table
-- Tag frequency chart
-- Failure type breakdown
-
-### Screenshot 11: Revision Interface
-User entering a revision request (e.g., "make the arrows thicker and add more labels") with the existing video visible above.
+### Screenshot 12: Docker Compose — All Services Running
+Terminal output showing `docker compose up --build` with all 4 services:
+- `animai-redis` — Redis 7 Alpine
+- `animai-api` — Express.js API server
+- `animai-client` — React Vite dev server
+- `animai-manim` — Python FastAPI + Manim sandbox
 
 ---
 
 ## CHAPTER 8: CONCLUSION
 
-AnimAI Studio successfully demonstrates that the process of creating educational animation videos can be fully automated using a multi-agent AI architecture. The system transforms what traditionally requires hours of manual Manim coding, video editing, and narration recording into a streamlined, minutes-long automated pipeline.
+AnimAI Studio successfully demonstrates that the process of creating educational animation videos can be fully automated using a multi-agent AI architecture deployed as a production-grade, full-stack microservices platform. The system transforms what traditionally requires hours of manual Manim coding, video editing, and narration recording into a streamlined, minutes-long automated pipeline.
 
 **Key achievements of this project:**
 
-1. **Multi-Agent Pipeline Architecture** — The five-agent design (Teacher → Planner → Coder → Debugger → Voice) mirrors a real-world film production team, with each agent specializing in one aspect of content creation. This modular approach enables independent improvement of each stage.
+1. **Full-Stack Microservices Architecture** — The system is decomposed into four independent services (React frontend, Express.js API, FastAPI AI microservice, Manim Docker sandbox) orchestrated via Docker Compose. This separation of concerns enables each layer to scale, deploy, and evolve independently.
 
-2. **Self-Healing Code Generation** — The system's ability to automatically detect, classify, and repair 20+ categories of Manim compilation errors — both through zero-cost deterministic fixes and LLM-assisted debugging — achieves a significantly higher first-attempt compilation rate than naive code generation.
+2. **Multi-Agent Pipeline Architecture** — The five-agent design (Teacher → Planner → Coder → Debugger → Voice) mirrors a real-world film production team, with each agent specializing in one aspect of content creation. This modular approach enables independent improvement of each stage.
 
-3. **Pedagogical Structure Enforcement** — Unlike generic video generators, AnimAI Studio enforces educational best practices through its 5-segment learning arc, voice-text synchronization rules, and structured curriculum design. Every video follows a consistent pedagogical pattern that has been refined through iterative testing.
+3. **Asynchronous Job Queue** — BullMQ + Redis enables non-blocking video generation. The API responds instantly while workers process jobs in the background, with real-time Socket.IO progress updates streamed to the client.
 
-4. **RAG-Enhanced Quality** — By retrieving ground-truth Manim API patterns from a FAISS-indexed documentation corpus, the system significantly reduces LLM hallucination of non-existent API methods and parameters.
+4. **Self-Healing Code Generation** — The system's ability to automatically detect, classify, and repair 20+ categories of Manim compilation errors — both through zero-cost deterministic fixes and LLM-assisted debugging — achieves a significantly higher first-attempt compilation rate than naive code generation.
 
-5. **Production-Ready Security** — Docker-based sandboxed execution ensures that AI-generated code cannot access or modify the host system, making the tool safe for deployment in educational institutions.
+5. **Pedagogical Structure Enforcement** — Unlike generic video generators, AnimAI Studio enforces educational best practices through its 5-segment learning arc, voice-text synchronization rules, and structured curriculum design. Every video follows a consistent pedagogical pattern that has been refined through iterative testing.
 
-6. **Continuous Improvement** — The feedback learning system enables the quality of generated animations to improve over time as users approve high-quality outputs, creating a positive feedback loop.
+6. **RAG-Enhanced Quality** — By retrieving ground-truth Manim API patterns from a FAISS-indexed documentation corpus, the system significantly reduces LLM hallucination of non-existent API methods and parameters.
 
-The project validates the feasibility of applying multi-agent LLM systems to creative content generation tasks that require both technical precision (correct Manim API usage) and domain expertise (educational pedagogy).
+7. **Production-Ready Security** — JWT authentication, bcrypt password hashing, Helmet security headers, ownership-based data isolation, and Docker sandboxing ensure the platform is safe for multi-user deployment in educational institutions.
+
+8. **CDN Video Delivery** — Cloudinary integration offloads video bandwidth from the application server, providing fast global delivery with auto-generated thumbnails.
+
+9. **Community Features** — The public gallery and sharing system enable a community of educators to discover and learn from each other's generated animations.
+
+The project validates the feasibility of applying multi-agent LLM systems to creative content generation tasks that require both technical precision (correct Manim API usage) and domain expertise (educational pedagogy), wrapped in a modern full-stack web application.
 
 ---
 
@@ -1145,25 +1330,39 @@ The project validates the feasibility of applying multi-agent LLM systems to cre
 
 4. **Sentence Transformers** — Reimers, N., & Gurevych, I. (2019). "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks." *Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing*. Available at: https://www.sbert.net/
 
-5. **Streamlit** — *Streamlit Inc.* (2024). "Streamlit Documentation." Available at: https://docs.streamlit.io/
+5. **React** — *Meta Platforms* (2024). "React — A JavaScript Library for Building User Interfaces." Available at: https://react.dev/
 
-6. **Azure Cognitive Services Speech** — *Microsoft* (2024). "Azure Speech Service Documentation." Available at: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/
+6. **Express.js** — *OpenJS Foundation* (2024). "Express — Fast, Unopinionated, Minimalist Web Framework for Node.js." Available at: https://expressjs.com/
 
-7. **gTTS** — *Pierre Nicolas Durette* (2024). "gTTS — Google Text-to-Speech." Available at: https://github.com/pndurette/gTTS
+7. **FastAPI** — *Sebastián Ramírez* (2024). "FastAPI — Modern, Fast Web Framework for Building APIs with Python." Available at: https://fastapi.tiangolo.com/
 
-8. **Docker** — *Docker Inc.* (2024). "Docker Documentation." Available at: https://docs.docker.com/
+8. **MongoDB & Mongoose** — *MongoDB Inc.* (2024). "MongoDB Documentation." Available at: https://www.mongodb.com/docs/ ; Mongoose ODM: https://mongoosejs.com/
 
-9. **Retrieval-Augmented Generation (RAG)** — Lewis, P., et al. (2020). "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks." *Advances in Neural Information Processing Systems*, 33, 9459-9474.
+9. **BullMQ** — *Taskforce.sh Inc.* (2024). "BullMQ — Premium Message Queue for Node.js based on Redis." Available at: https://bullmq.io/
 
-10. **Multi-Agent Systems** — Wooldridge, M. (2009). *An Introduction to MultiAgent Systems* (2nd ed.). John Wiley & Sons.
+10. **Socket.IO** — *Socket.IO Contributors* (2024). "Socket.IO — Bidirectional and Low-Latency Communication." Available at: https://socket.io/
 
-11. **Manim Voiceover** — *Manim Community* (2023). "Manim Voiceover Plugin." Available at: https://github.com/ManimCommunity/manim-voiceover
+11. **Cloudinary** — *Cloudinary Ltd.* (2024). "Cloudinary — Image and Video API Platform." Available at: https://cloudinary.com/documentation
 
-12. **LLM Code Generation** — Chen, M., et al. (2021). "Evaluating Large Language Models Trained on Code." *arXiv preprint arXiv:2107.03374*.
+12. **Azure Cognitive Services Speech** — *Microsoft* (2024). "Azure Speech Service Documentation." Available at: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/
 
-13. **Educational Video Design** — Mayer, R. E. (2009). *Multimedia Learning* (2nd ed.). Cambridge University Press.
+13. **gTTS** — *Pierre Nicolas Durette* (2024). "gTTS — Google Text-to-Speech." Available at: https://github.com/pndurette/gTTS
 
-14. **Self-Healing Systems** — Ghosh, D., Sharman, R., Rao, H. R., & Upadhyaya, S. (2007). "Self-healing systems — survey and synthesis." *Decision Support Systems*, 42(4), 2164-2185.
+14. **Docker** — *Docker Inc.* (2024). "Docker Documentation." Available at: https://docs.docker.com/
+
+15. **Retrieval-Augmented Generation (RAG)** — Lewis, P., et al. (2020). "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks." *Advances in Neural Information Processing Systems*, 33, 9459-9474.
+
+16. **Multi-Agent Systems** — Wooldridge, M. (2009). *An Introduction to MultiAgent Systems* (2nd ed.). John Wiley & Sons.
+
+17. **Manim Voiceover** — *Manim Community* (2023). "Manim Voiceover Plugin." Available at: https://github.com/ManimCommunity/manim-voiceover
+
+18. **LLM Code Generation** — Chen, M., et al. (2021). "Evaluating Large Language Models Trained on Code." *arXiv preprint arXiv:2107.03374*.
+
+19. **Educational Video Design** — Mayer, R. E. (2009). *Multimedia Learning* (2nd ed.). Cambridge University Press.
+
+20. **Self-Healing Systems** — Ghosh, D., Sharman, R., Rao, H. R., & Upadhyaya, S. (2007). "Self-healing systems — survey and synthesis." *Decision Support Systems*, 42(4), 2164-2185.
+
+21. **JSON Web Tokens (JWT)** — *IETF* (2015). "RFC 7519 — JSON Web Token." Available at: https://datatracker.ietf.org/doc/html/rfc7519
 
 ---
 
@@ -1171,16 +1370,83 @@ The project validates the feasibility of applying multi-agent LLM systems to cre
 
 ```
 animai-studio/
-├── app.py                          # Streamlit web interface (main entry point)
-├── Dockerfile                      # Docker image definition for Manim sandbox
-├── requirements.txt                # Python package dependencies
+├── docker-compose.yml              # Multi-service orchestration (Redis, API, Client, Manim)
+├── Dockerfile                      # Legacy Docker image definition
+├── Dockerfile.manim                # Manim sandbox + FastAPI Docker image
+├── requirements.txt                # Python package dependencies (AI pipeline)
 ├── README.md                       # Project overview and setup guide
 ├── PROJECT_REPORT.md               # This report
+├── app.py                          # Legacy Streamlit interface (deprecated)
 ├── failure_log_viewer.py           # CLI failure analysis dashboard
-├── .env                            # Environment variables (API keys)
+├── .env                            # Root environment variables (Gemini, Azure keys)
 ├── .gitignore                      # Git ignore rules
 │
-├── agent/                          # Multi-agent AI pipeline
+├── client/                         # React Frontend (Vite)
+│   ├── package.json                # Dependencies: React 19, React Router, Axios, Socket.IO
+│   ├── vite.config.js              # Vite config with API proxy to Express
+│   ├── Dockerfile                  # Frontend Docker image
+│   ├── index.html                  # SPA entry point
+│   └── src/
+│       ├── main.jsx                # React DOM root
+│       ├── App.jsx                 # Root component with routing
+│       ├── index.css               # Global styles (dark theme)
+│       ├── context/
+│       │   └── AuthContext.jsx     # JWT auth state (login, register, logout)
+│       ├── hooks/
+│       │   └── useSocket.js        # Socket.IO connection hook
+│       ├── services/
+│       │   └── api.js              # Axios instance with JWT interceptor
+│       ├── components/
+│       │   ├── Navbar.jsx          # Navigation bar
+│       │   ├── AnimationCard.jsx   # Animation preview card
+│       │   ├── ProgressTracker.jsx # Real-time progress stages
+│       │   └── VideoPlayer.jsx     # Embedded video player
+│       └── pages/
+│           ├── Auth.jsx            # Login / Register page
+│           ├── Home.jsx            # Topic input + recent animations
+│           ├── Studio.jsx          # Plan review + generation + video
+│           ├── Gallery.jsx         # User's animation gallery
+│           └── Explore.jsx         # Public community gallery
+│
+├── server/                         # Express.js API Server
+│   ├── package.json                # Dependencies: Express 5, Mongoose, BullMQ, Socket.IO
+│   ├── Dockerfile                  # Backend Docker image
+│   ├── .env                        # Server env vars (MongoDB, JWT, Redis, Cloudinary)
+│   └── src/
+│       ├── index.js                # Server entry point (Express + Socket.IO)
+│       ├── config/
+│       │   ├── env.js              # Environment variable loader
+│       │   ├── db.js               # MongoDB connection (Mongoose)
+│       │   └── redis.js            # Redis connection (IORedis)
+│       ├── middleware/
+│       │   ├── auth.js             # JWT authentication middleware
+│       │   └── errorHandler.js     # Global error handler
+│       ├── models/
+│       │   ├── User.js             # User schema (email, username, passwordHash)
+│       │   ├── Animation.js        # Animation schema (prompt, plan, video, status)
+│       │   └── Feedback.js         # Feedback schema (votes, comments)
+│       ├── routes/
+│       │   ├── auth.routes.js      # POST /register, /login, GET /me
+│       │   ├── animation.routes.js # CRUD + plan + generate + share
+│       │   └── feedback.routes.js  # POST /feedback
+│       ├── controllers/
+│       │   ├── auth.controller.js  # Register, login, me handlers
+│       │   ├── animation.controller.js  # CRUD + plan + queue + gallery
+│       │   └── feedback.controller.js   # Vote submission handler
+│       ├── services/
+│       │   ├── queue.js            # BullMQ queue + worker (video generation)
+│       │   ├── pythonBridge.js     # HTTP calls to FastAPI (Axios)
+│       │   └── cloudinary.js       # CDN video upload/delete
+│       ├── sockets/
+│       │   └── progress.js         # Socket.IO room-based progress events
+│       └── utils/
+│           └── validators.js       # Joi validation schemas
+│
+├── ai-service/                     # FastAPI AI Microservice
+│   ├── main.py                     # HTTP wrapper: /plan, /generate, /revise, /health
+│   └── requirements.txt            # FastAPI, Uvicorn, Pydantic
+│
+├── agent/                          # Multi-agent AI pipeline (Python)
 │   ├── __init__.py                 # Package init
 │   ├── orchestrator.py             # Central pipeline controller
 │   ├── teacher.py                  # Pedagogical curriculum designer
@@ -1228,5 +1494,5 @@ animai-studio/
 
 ---
 
-*Report generated for AnimAI Studio v1.0*
-*Date: April 2026*
+*Report generated for AnimAI Studio v2.0*
+*Date: May 2026*

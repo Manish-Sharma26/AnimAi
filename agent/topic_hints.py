@@ -18,7 +18,7 @@ from typing import Optional
 
 from agent.llm import call_llm
 
-ADVISOR_MODEL = os.getenv("GEMINI_ADVISOR_MODEL", "gemini-2.5-flash")
+ADVISOR_MODEL = os.getenv("ADVISOR_MODEL", "gemini-2.5-flash-lite")
 
 # ═══════════════════════════════════════════════════════════════════════
 # DYNAMIC ANIMATION ADVISOR — asks Gemini what animations fit the topic

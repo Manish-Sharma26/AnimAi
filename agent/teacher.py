@@ -2,7 +2,7 @@ import json
 import os
 from agent.llm import call_llm
 
-TEACHER_MODEL = os.getenv("GEMINI_TEACHER_MODEL", "gemini-2.5-flash")
+TEACHER_MODEL = os.getenv("TEACHER_MODEL", "gemini-2.5-flash")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 7-BEAT STRUCTURED TEACHING ARC

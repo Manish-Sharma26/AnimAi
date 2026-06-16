@@ -5,7 +5,7 @@ from agent.llm import call_llm
 from agent.coder import extract_code, _strip_kwarg, _COLOR_MAP
 from rag.retriever import retrieve as rag_retrieve
 
-DEBUGGER_MODEL = os.getenv("GEMINI_DEBUGGER_MODEL", "gemini-2.5-flash")
+DEBUGGER_MODEL = os.getenv("DEBUGGER_MODEL", "gemini-2.5-flash-lite")
 
 DEBUGGER_PROMPT = """You are an expert Manim debugger.
 Your ONLY job: fix the specific compilation error with minimal changes.
