@@ -169,6 +169,12 @@ def run_agent_with_plan(user_query: str, approved_plan: dict) -> dict:
     for attempt in range(1, MAX_ATTEMPTS + 1):
         print(f"\n[Agent] Attempt {attempt}/{MAX_ATTEMPTS}")
 
+        # ── Orchestrator-level safety net: auto-fix known hallucinated APIs ──
+        # These are the #1 cause of first-attempt NameErrors. Fixing them here
+        # is cheaper than burning a debugger + sandbox round-trip.
+        code = code.replace('SurroundingRoundedRectangle', 'SurroundingRectangle')
+        code = code.replace('.to_center()', '.move_to(ORIGIN)')
+
         result = run_manim_sandbox(code, query=user_query)
 
         if result["success"]:

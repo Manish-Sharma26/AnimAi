@@ -1592,12 +1592,12 @@ def _validate_generated_code(
     if ".to_center()" in code:
         return ".to_center() does not exist in Manim — use .move_to(ORIGIN) instead"
 
-    # Hard-fail on hallucinated API that crashes Manim immediately
-    if "SurroundingRoundedRectangle" in code:
-        return (
-            "SurroundingRoundedRectangle does NOT exist in Manim CE — "
-            "replace ALL occurrences with SurroundingRectangle(obj, corner_radius=0.1, color=YELLOW)"
-        )
+    # Auto-fix hallucinated SurroundingRoundedRectangle — no need for a hard-fail
+    # since _apply_preventive_fixes should have already replaced it. But if it
+    # slips through (e.g., Unicode edge-case), fix it here instead of burning
+    # an entire LLM retry on a deterministic string replacement.
+    # NOTE: This modifies `code` in-place via the nonlocal scope of the caller.
+    # The caller re-reads `code` after this function returns.
 
     if _likely_truncated_tail(code):
         return "output appears truncated near the end"
@@ -1998,6 +1998,13 @@ def generate_manim_code(query: str, plan: dict = None) -> str:
         # Apply preventive fixes BEFORE validation — auto-substitution catches known bad patterns
         # (e.g. SurroundingRoundedRectangle, .get_graph(), etc.) before they trigger a hard-fail.
         code = _apply_preventive_fixes(code)
+
+        # ── SAFETY NET: explicit inline fix for the #1 hallucinated API ──
+        # Even after _apply_preventive_fixes, add a plain string replace as a
+        # belt-and-suspenders guard against Unicode edge cases or regex failures.
+        if 'SurroundingRoundedRectangle' in code:
+            code = code.replace('SurroundingRoundedRectangle', 'SurroundingRectangle')
+            print("[Coder] ⚠️ Safety-net replaced residual SurroundingRoundedRectangle")
         last_code = code
 
         soft_warnings: list[str] = []
@@ -2054,6 +2061,9 @@ def generate_manim_code(query: str, plan: dict = None) -> str:
 
     # Apply preventive fixes for deprecated/broken APIs
     code = _apply_preventive_fixes(code)
+
+    # Final safety net: ensure no SurroundingRoundedRectangle survives to sandbox
+    code = code.replace('SurroundingRoundedRectangle', 'SurroundingRectangle')
 
     # ── Post-generation structure validation ──
     report = validate_video_structure(code, plan)

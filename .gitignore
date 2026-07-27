@@ -25,6 +25,8 @@ test.mp3
 data/
 *.json
 
+# Dev/test scripts
+scripts/
 # IDE
 .vscode/
 .idea/
@@ -45,3 +47,6 @@ temp/
 
 # Logs
 *.log
+
+# Binary index files
+*.index

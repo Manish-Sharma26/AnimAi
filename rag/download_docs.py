@@ -24,18 +24,42 @@ MANIM_DOC_URLS = [
     "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/animation/movement.py",
     "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/graph.py",
     "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/table.py",
-    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/coordinate_systems.py",
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/graphing/coordinate_systems.py",
     # Manim-Voiceover source docs — FULL LIBRARY
-    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/manim_voiceover/voiceover_scene.py",
-    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/manim_voiceover/services/gtts.py",
-    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/manim_voiceover/tracker.py",
-    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/manim_voiceover/helper.py",
+    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/src/manim_voiceover/voiceover_scene.py",
+    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/src/manim_voiceover/services/gtts.py",
+    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/src/manim_voiceover/tracker.py",
+    "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/src/manim_voiceover/helper.py",
     # Manim-Voiceover examples — Only the safe non-bookmark examples
     "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/examples/gtts-example.py",
     "https://raw.githubusercontent.com/ManimCommunity/manim-voiceover/main/examples/approximating-tau.py",
     # Manim animation fading/composition
     "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/animation/fading.py",
     "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/animation/composition.py",
+    # Math / LaTeX text rendering
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/text/tex_mobject.py",
+    # Shape matchers (SurroundingRectangle, BackgroundRectangle, Underline)
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/geometry/shape_matchers.py",
+    # Growing animations (GrowFromCenter, GrowArrow, GrowFromEdge, etc.)
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/animation/growing.py",
+    # Rotation animation
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/animation/rotation.py",
+    # ValueTracker for dynamic animations with updaters
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/value_tracker.py",
+    # Matrix visualization (Matrix, DecimalMatrix, IntegerMatrix)
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/matrix.py",
+    # NumberLine (used in probability, statistics, timelines)
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/graphing/number_line.py",
+    # Brace and BraceBetweenPoints
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/svg/brace.py",
+    # Speed modifier (ChangeSpeed)
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/animation/speedmodifier.py",
+    # Arrow tips (ArrowTip, ArrowTriangleTip, etc.)
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/geometry/tips.py",
+    # Updaters (UpdateFromFunc, UpdateFromAlphaFunc, always_redraw)
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/animation/updaters/update.py",
+    # ParametricFunction, FunctionGraph
+    "https://raw.githubusercontent.com/ManimCommunity/manim/main/manim/mobject/graphing/functions.py",
 ]
 
 # Also add handcrafted pattern examples for common animation types
@@ -800,6 +824,279 @@ class LinkedListExample(Scene):
 
         self.play(LaggedStart(*[FadeIn(n, shift=RIGHT*0.3) for n in nodes], lag_ratio=0.15))
         self.play(LaggedStart(*[Create(a) for a in arrows], lag_ratio=0.1))
+""",
+    },
+    # ────────────────────────────────────────────────────────────────
+    # ANTI-PATTERN: Hallucinated APIs that DO NOT EXIST in Manim
+    # ────────────────────────────────────────────────────────────────
+    {
+        "title": "Hallucinated Manim APIs — classes and methods that DO NOT EXIST",
+        "content": """
+# CRITICAL: These APIs are frequently hallucinated by LLMs. NONE of them exist.
+#
+# ❌ SurroundingRoundedRectangle — DOES NOT EXIST (NameError)
+#   ✅ Use: SurroundingRectangle(mobject, corner_radius=0.1, color=YELLOW)
+#
+# ❌ Text.set_text("new text") — Text is IMMUTABLE in Manim CE
+#   ✅ Use: new_text = Text("new text", ...); self.play(Transform(old, new_text))
+#
+# ❌ .to_center() — does NOT exist on any Mobject
+#   ✅ Use: .move_to(ORIGIN)
+#
+# ❌ Axes.get_graph(lambda x: ...) — DEPRECATED in Manim 0.18+
+#   ✅ Use: axes.plot(lambda x: ..., color=YELLOW)
+#
+# ❌ Axes.get_vertical_line_to_graph(...) — DEPRECATED
+#   ✅ Use: axes.get_vertical_line(axes.c2p(x, y))
+#
+# ❌ Text(alignment="left") — Text does NOT accept alignment=
+#   ✅ Use: VGroup(t1, t2).arrange(DOWN, aligned_edge=LEFT)
+#
+# ❌ Text(max_width=5) — Text does NOT accept max_width=
+#   ✅ Use: my_text = Text("..."); my_text.scale_to_fit_width(5)
+#
+# ❌ Text(justify=True) — Text does NOT accept justify=
+#
+# ❌ Paragraph(width=5) — width= is NOT a layout constraint in Manim v0.20.1
+#   ✅ Use: VGroup of separate Text() lines + .scale_to_fit_width(5)
+#
+# ❌ .get_part_by_text("string") on Paragraph/Text — crashes with getter() error
+#   ✅ Use: Split into separate Text() objects, Indicate each directly
+#
+# ❌ Rectangle(corner_radius=0.2) — Rectangle does NOT accept corner_radius
+#   ✅ Use: RoundedRectangle(corner_radius=0.2, width=W, height=H)
+#
+# ❌ Line(start, end, opacity=0.3) — geometry constructors reject bare opacity=
+#   ✅ Use: Line(start, end, stroke_opacity=0.3) or Circle(fill_opacity=0.5)
+#
+# ❌ ORANGE_E, PINK_C, WHITE_A, BLACK_D — these color variants DO NOT EXIST
+#   ✅ ORANGE, PINK, WHITE, BLACK have NO suffix variants. Use base name or hex.
+#   ✅ Colors WITH _A-_E: RED, BLUE, GREEN, YELLOW, GOLD, TEAL, PURPLE, MAROON, GREY
+"""
+    },
+    # ────────────────────────────────────────────────────────────────
+    # MathTex / LaTeX CORRECT USAGE
+    # ────────────────────────────────────────────────────────────────
+    {
+        "title": "MathTex and Tex — correct LaTeX usage in Manim",
+        "content": """
+# Pattern: Using MathTex and Tex for mathematical expressions
+from manim import *
+
+class MathTexExample(Scene):
+    def construct(self):
+        self.camera.background_color = "#0F0F1A"
+
+        # ✅ MathTex for math expressions (auto math mode)
+        formula = MathTex(r"E = mc^2", font_size=48, color="#4FACFE")
+        formula.to_edge(UP, buff=1.0)
+        self.play(Write(formula))
+
+        # ✅ MathTex with multiple parts (for selective coloring)
+        equation = MathTex(r"f(x)", r"=", r"x^2 + 2x + 1", font_size=36)
+        equation.set_color_by_tex("f(x)", "#4FACFE")
+        equation.set_color_by_tex("x^2", "#F9CA24")
+        equation.next_to(formula, DOWN, buff=0.8)
+        self.play(Write(equation))
+
+        # ✅ Tex for mixed text and math
+        mixed = Tex(r"The area is $A = \\pi r^2$", font_size=30, color=WHITE)
+        mixed.next_to(equation, DOWN, buff=0.8)
+        self.play(Write(mixed))
+
+        # ✅ Transform one equation into another
+        new_eq = MathTex(r"f(x)", r"=", r"(x+1)^2", font_size=36)
+        new_eq.move_to(equation)
+        self.play(TransformMatchingTex(equation, new_eq))
+
+        # ✅ Axis labels with Tex (correct — pass color to Tex, NOT to get_x_axis_label)
+        axes = Axes(x_range=[-3, 3], y_range=[-2, 5])
+        x_label = axes.get_x_axis_label(Tex(r"$x$", color=WHITE))
+        y_label = axes.get_y_axis_label(Tex(r"$f(x)$", color=WHITE))
+        # ❌ WRONG: axes.get_x_axis_label(Tex("x"), color=WHITE) — color= not accepted
+        self.play(Create(axes), Write(x_label), Write(y_label))
+
+        self.wait(1.0)
+"""
+    },
+    # ────────────────────────────────────────────────────────────────
+    # OPACITY API — stroke_opacity vs fill_opacity vs bare opacity
+    # ────────────────────────────────────────────────────────────────
+    {
+        "title": "Opacity API rules — stroke_opacity vs fill_opacity (constructors reject bare opacity=)",
+        "content": """
+# CRITICAL: Manim geometry CONSTRUCTORS reject bare `opacity=` parameter.
+# This causes: TypeError: Mobject.__init__() got an unexpected keyword argument 'opacity'
+#
+# RULE: Use stroke_opacity= for stroke objects, fill_opacity= for fill objects.
+from manim import *
+
+class OpacityExample(Scene):
+    def construct(self):
+        self.camera.background_color = "#0F0F1A"
+
+        # ✅ CORRECT — stroke-based objects use stroke_opacity=
+        line = Line(LEFT * 2, RIGHT * 2, color=BLUE, stroke_opacity=0.5)
+        arrow = Arrow(LEFT, RIGHT, color=RED, stroke_opacity=0.7)
+        dashed = DashedLine(UP, DOWN, color=GREY, stroke_opacity=0.3)
+
+        # ✅ CORRECT — fill-based objects use fill_opacity=
+        circle = Circle(radius=1, color="#4FACFE", fill_opacity=0.5)
+        rect = RoundedRectangle(corner_radius=0.15, width=3, height=1.5)
+        rect.set_fill("#1A1A2E", opacity=0.8)  # .set_fill() DOES accept opacity=
+        rect.set_stroke("#F9CA24", width=2)
+
+        # ❌ WRONG — these CRASH:
+        # line_bad = Line(LEFT, RIGHT, opacity=0.5)        # TypeError!
+        # arrow_bad = Arrow(LEFT, RIGHT, opacity=0.3)      # TypeError!
+        # circle_bad = Circle(radius=1, opacity=0.5)       # TypeError!
+
+        # ✅ Alternative: create first, then set opacity
+        dot = Dot(ORIGIN, color=GREEN)
+        dot.set_opacity(0.6)  # This works on any mobject
+
+        self.play(Create(line), Create(arrow), Create(dashed))
+        self.play(FadeIn(circle), FadeIn(rect), FadeIn(dot))
+        self.wait(1.0)
+"""
+    },
+    # ────────────────────────────────────────────────────────────────
+    # Rectangle vs RoundedRectangle — corner_radius constraint
+    # ────────────────────────────────────────────────────────────────
+    {
+        "title": "Rectangle vs RoundedRectangle — corner_radius only on RoundedRectangle",
+        "content": """
+# CRITICAL: Rectangle() does NOT accept corner_radius=
+# This causes: TypeError: Mobject.__init__() got an unexpected keyword argument 'corner_radius'
+from manim import *
+
+class RectangleExample(Scene):
+    def construct(self):
+        self.camera.background_color = "#0F0F1A"
+
+        # ✅ Sharp corners → use Rectangle
+        sharp_box = Rectangle(width=3, height=1.5)
+        sharp_box.set_stroke("#4FACFE", width=2)
+        sharp_box.set_fill("#1A1A2E", opacity=1)
+
+        # ✅ Rounded corners → use RoundedRectangle
+        rounded_box = RoundedRectangle(corner_radius=0.2, width=3, height=1.5)
+        rounded_box.set_stroke("#F9CA24", width=2)
+        rounded_box.set_fill("#1A1A2E", opacity=1)
+
+        # ❌ WRONG — this CRASHES:
+        # bad_box = Rectangle(width=3, height=1.5, corner_radius=0.2)  # TypeError!
+
+        # ✅ SurroundingRectangle with corner_radius IS valid
+        label = Text("Hello", font_size=28, color=WHITE)
+        highlight = SurroundingRectangle(label, corner_radius=0.1, color=YELLOW, buff=0.2)
+
+        VGroup(sharp_box, rounded_box).arrange(RIGHT, buff=1.0).move_to(UP)
+        label.move_to(DOWN)
+
+        self.play(FadeIn(sharp_box), FadeIn(rounded_box))
+        self.play(FadeIn(label), Create(highlight))
+        self.wait(1.0)
+"""
+    },
+    # ────────────────────────────────────────────────────────────────
+    # ValueTracker + Updater pattern for dynamic animations
+    # ────────────────────────────────────────────────────────────────
+    {
+        "title": "ValueTracker and updater pattern — dynamic animations",
+        "content": """
+# Pattern: Using ValueTracker with always_redraw for smooth dynamic animations
+from manim import *
+
+class ValueTrackerExample(Scene):
+    def construct(self):
+        self.camera.background_color = "#0F0F1A"
+
+        axes = Axes(
+            x_range=[-3, 3, 1], y_range=[-2, 6, 1],
+            axis_config={"color": "#4FACFE", "stroke_width": 2}
+        )
+        curve = axes.plot(lambda x: x**2, color="#F9CA24", stroke_width=3)
+        self.play(Create(axes), Create(curve))
+
+        # ValueTracker controls the x-position of a dot
+        x_tracker = ValueTracker(-2.5)
+
+        # always_redraw redraws the dot every frame at the tracked position
+        dot = always_redraw(lambda: Dot(
+            axes.c2p(x_tracker.get_value(), x_tracker.get_value()**2),
+            color="#6AB04C", radius=0.12
+        ))
+
+        # always_redraw for a vertical dashed line
+        v_line = always_redraw(lambda: DashedLine(
+            axes.c2p(x_tracker.get_value(), 0),
+            axes.c2p(x_tracker.get_value(), x_tracker.get_value()**2),
+            color=GREY, stroke_width=1.5
+        ))
+
+        # Dynamic label showing current x value
+        label = always_redraw(lambda: Text(
+            f"x = {x_tracker.get_value():.1f}",
+            font_size=22, color=WHITE
+        ).next_to(dot, UR, buff=0.2))
+
+        self.play(FadeIn(dot), Create(v_line), FadeIn(label))
+
+        # Animate the tracker — dot, line, and label move smoothly
+        self.play(x_tracker.animate.set_value(2.5), run_time=4, rate_func=smooth)
+        self.wait(1.0)
+"""
+    },
+    # ────────────────────────────────────────────────────────────────
+    # STACK / QUEUE visualization pattern
+    # ────────────────────────────────────────────────────────────────
+    {
+        "title": "Stack and queue visualization pattern",
+        "content": """
+# Pattern: Stack (LIFO) and Queue (FIFO) with push/pop animations
+from manim import *
+
+class StackExample(Scene):
+    def construct(self):
+        self.camera.background_color = "#0F0F1A"
+
+        # Stack container
+        container = Rectangle(width=2.0, height=4.5)
+        container.set_stroke("#4FACFE", width=2)
+        container.set_fill("#0A0A1A", opacity=0.5)
+        container.move_to(ORIGIN)
+        stack_label = Text("STACK", font_size=24, color="#4FACFE").next_to(container, UP, buff=0.3)
+        self.play(Create(container), FadeIn(stack_label))
+
+        # Push elements
+        stack_items = []
+        values = [10, 20, 30]
+        for i, val in enumerate(values):
+            box = RoundedRectangle(corner_radius=0.08, width=1.6, height=0.7)
+            box.set_fill("#1A1A2E", opacity=1).set_stroke("#4FACFE", width=2)
+            txt = Text(str(val), font_size=28, color=WHITE, weight=BOLD).move_to(box)
+            item = VGroup(box, txt)
+            # Stack grows from bottom
+            y_pos = container.get_bottom()[1] + 0.5 + i * 0.85
+            item.move_to([container.get_center()[0], y_pos, 0])
+
+            # Push animation: item enters from above
+            item.save_state()
+            item.move_to(container.get_top() + UP * 1.0)
+            self.play(item.animate.restore(), run_time=0.6)
+            stack_items.append(item)
+
+        # Pop (LIFO): remove top element
+        top = stack_items.pop()
+        self.play(top.animate.shift(RIGHT * 3), run_time=0.5)
+        self.play(
+            top[0].animate.set_fill("#2A0A0A", opacity=1).set_stroke(RED, width=2),
+            run_time=0.3
+        )
+        pop_label = Text("Popped!", font_size=22, color=RED).next_to(top, UP, buff=0.2)
+        self.play(FadeIn(pop_label))
+        self.wait(1.0)
 """
     },
 ]

@@ -320,6 +320,11 @@ def debug_manim_code(code: str, error: str) -> str:
     )
     fixed_code = extract_code(response)
 
+    # Apply deterministic fixes to the LLM-generated fix as well — the LLM
+    # may re-introduce hallucinated APIs in its corrected output.
+    fixed_code = _apply_common_manim_runtime_fixes(fixed_code, error)
+    fixed_code = fixed_code.replace('SurroundingRoundedRectangle', 'SurroundingRectangle')
+
     print(f"[Debugger] Fixed code generated ({len(fixed_code.splitlines())} lines)")
     
     # Sanity check: fixed code should not be drastically shorter (surgical fix, not rewrite)

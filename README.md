@@ -146,8 +146,10 @@ cd server && npm install && npm run dev
 # Terminal 3: React Client
 cd client && npm install && npm run dev
 
-# Terminal 4: Python/Manim (optional — only for video generation)
-cd .. && python -m uvicorn sandbox.sandbox:app --port 8000
+# Terminal 4: Python/Manim AI Service (optional — only for video generation)
+cd ai-service
+..\.venv\Scripts\activate   # activate the virtual environment
+python -m uvicorn main:app --port 8000 --reload
 ```
 
 ### 5. Open
@@ -184,8 +186,11 @@ animai-studio/
 │   ├── scripts/                # seed-gallery.js
 │   └── Dockerfile
 │
+├── ai-service/                 # FastAPI AI Microservice
+│   └── main.py                 # FastAPI server — exposes AI pipeline as HTTP endpoints
+│
 ├── sandbox/                    # Python Manim Sandbox
-│   └── sandbox.py              # FastAPI server + Docker Manim execution
+│   └── sandbox.py              # Docker Manim execution helper (no FastAPI app)
 │
 ├── agent/                      # AI Agent Pipeline
 │   ├── orchestrator.py         # Multi-agent coordination
