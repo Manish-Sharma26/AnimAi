@@ -165,19 +165,19 @@ def _format_working_advice(advice: dict) -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────
-# STRUCTURED 5-SEGMENT PLANNER PROMPT
+# STRUCTURED 4-SEGMENT PLANNER PROMPT
 # Used when query intent is "bare_topic" or "simple_explanation".
-# Maps the teacher's 5-beat arc directly to 5 video segments.
+# Maps the teacher's 4-beat arc directly to 4 video segments.
 # Enforces zero content overlap between segments.
 # ─────────────────────────────────────────────────────────────────────
 
 STRUCTURED_PLANNER_PROMPT = """You are an expert educational animation planner.
 A student wants to learn about \"{query}\" and needs a structured educational video.
 
-A curriculum expert has already broken this into a 5-beat teaching arc.
+A curriculum expert has already broken this into a 4-beat teaching arc.
 Your job is to convert each beat into a video segment plan.
 
---- TEACHER'S 5-BEAT ARC ---
+--- TEACHER'S 4-BEAT ARC ---
 {teacher_beats}
 --- END BEATS ---
 
@@ -197,50 +197,44 @@ SEGMENT 1 — TOPIC NAME (maps to Beat 1: just the topic name)
 
 SEGMENT 2 — THEORY (maps to Beat 2: what it IS + core theory)
 - definition: The clear one-sentence definition from Beat 2.
-- theory_points: The theory_points list from Beat 2 (3-5 points).
+- theory_points: The theory_points list from Beat 2 (2-3 points, keep brief).
 - Each point must be shown as on-screen text AND spoken by voiceover.
 - voiceover: MUST read the definition aloud, then read each theory point aloud.
   ⚠️ VOICE-SCREEN RULE: Every word on screen is spoken. No silent text.
 - This is TEXT-ONLY. No diagrams, no animation here.
-- DO NOT include use cases or "why it's needed" — that's Segment 4.
+- DO NOT include use cases or "why it's needed" — keep this short.
 - DO NOT include how-it-works steps — that's Segment 3.
-- Duration: 10-15 seconds.
+- Duration: 8-12 seconds (keep SHORT — Segment 3 is the star).
 
 SEGMENT 3 — WORKING (maps to Beat 3: mechanism / core animation)
+- ⭐ THIS IS THE MOST IMPORTANT SEGMENT — 60%+ of the total video duration.
 - This is the HEART of the video — the visual demonstration.
 - Use the Working Advisor's recommendations for visual type, Manim objects, and layout.
 - Each step from Beat 3 becomes one animation sub-step.
-- Include the AHA MOMENT at aha_step_index.
+- MUST have AT LEAST 4-6 sub-steps with distinct visual changes.
+- Each sub-step must show MOVEMENT, TRANSFORMATION, or VISUAL CHANGE — not just text.
+- Include the AHA MOMENT at aha_step_index with special visual treatment.
 - Split-screen: LEFT 60% for animation, RIGHT 40% for key text.
 - Use each step's voiceover from step_voiceovers.
-- The visual should be as RICH and DETAILED as possible.
+- The visual should be as RICH and DETAILED as possible — this is what viewers come for.
 - Follow the advisor's color scheme and layout recommendations.
 - DO NOT repeat theory from Segment 2.
-- DO NOT include use cases from Segment 4.
-- Duration: 20-30 seconds.
+- Duration: 40-60 seconds (THIS segment should be the LONGEST by far).
 
-SEGMENT 4 — NEED / USE CASE (maps to Beat 4: why it matters)
-- need: Why this topic exists / what problem it solves.
-- use_cases: 2-4 concrete real-world applications.
-- voiceover: MUST read the need statement and each use case aloud.
-  ⚠️ VOICE-SCREEN RULE: Every word on screen is spoken. No silent text.
-- DO NOT re-define the topic (that was Segment 2).
-- DO NOT re-explain HOW it works (that was Segment 3).
-- Duration: 8-12 seconds.
-
-SEGMENT 5 — SUMMARY (maps to Beat 5: key takeaway)
-- Show the takeaway from Beat 5 inside a green rounded banner.
+SEGMENT 4 — SUMMARY (maps to Beat 4: key takeaway)
+- Show the takeaway from Beat 4 inside a green rounded banner.
+- Include a brief application/use mention as a second line in the banner.
 - voiceover: MUST read the takeaway text aloud.
   ⚠️ VOICE-SCREEN RULE: Voiceover matches the on-screen text.
+- ❌ Do NOT create a separate "Need/Use Case" segment — just mention applications briefly here.
 - Duration: 5-8 seconds. End with self.wait(2.0).
 
 ═══ ANTI-OVERLAP RULE (CRITICAL) ═══
-Audit the five segments before returning:
+Audit the four segments before returning:
 → Segment 1 (topic name) has NO definition, NO theory, NO use case.
-→ Segment 2 (theory) has NO use cases and NO mechanism steps.
-→ Segment 3 (working) has NO re-definition and NO use cases.
-→ Segment 4 (need/use case) does NOT re-explain what it is or how it works.
-→ Segment 5 takeaway does NOT word-for-word repeat Segment 2 definition or Segment 4 need.
+→ Segment 2 (theory) has NO use cases and NO mechanism steps. Keep it BRIEF.
+→ Segment 3 (working) has NO re-definition — purely visual mechanism. This is the LONGEST segment.
+→ Segment 4 (summary) briefly mentions applications but does NOT re-explain how it works.
 
 Return ONLY a JSON object in this exact format:
 {{
@@ -275,35 +269,27 @@ Return ONLY a JSON object in this exact format:
             "layout": "Advisor's layout recommendation",
             "color_scheme": "Advisor's color scheme",
             "key_formulas": ["Any formulas in LaTeX"],
-            "duration_seconds": 25
-        }},
-        {{
-            "type": "need_usecase",
-            "need": "Why this topic exists (1 sentence from Beat 4)",
-            "use_cases": ["Use case 1", "Use case 2", "Use case 3"],
-            "voiceover": "Read need + each use case aloud (30-50 words)",
-            "key_text": "Why It Matters (3-5 words)",
-            "duration_seconds": 10
+            "duration_seconds": 45
         }},
         {{
             "type": "summary",
-            "takeaway": "Beat 5 takeaway (5-15 word memorable statement)",
-            "voiceover": "Beat 5 voiceover — matches takeaway text",
+            "takeaway": "Beat 4 takeaway (5-15 word memorable statement)",
+            "application": "One brief real-world application (e.g., Used in: text editors, DNA search)",
+            "voiceover": "Beat 4 voiceover — matches takeaway text + brief application mention",
             "key_text": "Remember: [key phrase]",
-            "duration_seconds": 6
+            "duration_seconds": 8
         }}
     ],
     "pedagogical_arc": {{
         "topic_intro": "Beat 1 topic name",
         "theory": "Beat 2 definition + theory points summary",
-        "mechanism": "Beat 3 working steps summary",
-        "need": "Beat 4 need/use case summary",
-        "takeaway": "Beat 5 takeaway"
+        "mechanism": "Beat 3 working steps summary (MOST IMPORTANT — 60%+ of video)",
+        "takeaway": "Beat 4 takeaway + brief application"
     }},
     "emotional_beats": ["curious", "informed", "following", "aha!", "confident"],
     "opening_scene": "Title (topic name) — just the name, large and prominent",
-    "closing_scene": "Green banner with Beat 5 takeaway, then wait 2 seconds",
-    "summary": "Beat 5 takeaway"
+    "closing_scene": "Green banner with Beat 4 takeaway + brief application, then wait 2 seconds",
+    "summary": "Beat 4 takeaway"
 }}
 
 Return ONLY the JSON. No explanation before or after."""
@@ -706,8 +692,8 @@ def _normalize_plan(plan: dict, query: str) -> dict:
     is_structured = "topic_name" in seg_types or "theory" in seg_types or "need_usecase" in seg_types
 
     if is_structured:
-        # ── 5-segment structured arc — enforce canonical order ──
-        expected_types = ["topic_name", "theory", "working", "need_usecase", "summary"]
+        # ── 4-segment structured arc — enforce canonical order ──
+        expected_types = ["topic_name", "theory", "working", "summary"]
         found_types = [s.get("type") for s in segments]
         for expected_type in expected_types:
             if expected_type not in found_types:
@@ -889,12 +875,11 @@ def _default_segment(seg_type: str, query: str) -> dict:
 
 
 def _build_default_structured_segments(plan: dict, query: str) -> list:
-    """Build default 5-segment structure for structured arc."""
+    """Build default 4-segment structure for structured arc."""
     return [
         _default_segment("topic_name", query),
         _default_segment("theory", query),
         _default_segment("working", query),
-        _default_segment("need_usecase", query),
         _default_segment("summary", query),
     ]
 
@@ -1115,7 +1100,7 @@ def plan_animation(query: str, teacher_explanation: dict = None, intent: str = "
             topic_hints_block=topic_hints_block,
             working_advice_block=working_advice_block,
         )
-        print("[Planner] Using STRUCTURED 5-segment planner prompt (zero-overlap)")
+        print("[Planner] Using STRUCTURED 4-segment planner prompt (zero-overlap)")
     else:
         explanation_text = _format_teacher_explanation(teacher_explanation)
         if hints_text:

@@ -119,10 +119,7 @@ def _build_tts_prompt_context() -> dict:
             "       try:\n"
             "           self.set_speech_service(AzureService(**azure_kwargs))\n"
             "       except Exception:\n"
-            "           if fallback_provider == \"gtts\":\n"
-            "               self.set_speech_service(GTTSService(lang=\"en\"))\n"
-            "           else:\n"
-            "               raise\n"
+            "           self.set_speech_service(GTTSService(lang=\"en\"))\n"
             "   else:\n"
             "       self.set_speech_service(GTTSService(lang=\"en\"))\n"
             "   ```"
@@ -167,9 +164,9 @@ CODER_PROMPT = """You are an expert Manim animator creating professional educati
 The plan below contains a `segments` array. Generate code for ALL segments in the plan.
 Each segment MUST be separated by FULL SCREEN CLEANUP.
 
-The plan may use EITHER a 5-segment structured arc OR a 5-segment detailed arc:
+The plan may use EITHER a 4-segment structured arc OR a free-form arc:
 
-── 5-SEGMENT STRUCTURED ARC (segment types: topic_name, theory, working, need_usecase, summary) ──
+── 4-SEGMENT STRUCTURED ARC (segment types: topic_name, theory, working, summary) ──
 
 SEGMENT: topic_name (comment: # ═══ SEGMENT 1: TOPIC NAME ═══)
 - Show ONLY the topic name — LARGE, prominent, visually striking
@@ -186,32 +183,33 @@ SEGMENT: theory (comment: # ═══ SEGMENT 2: THEORY ═══)
 - ⚠️ Everything on screen MUST be spoken — no silent text
 - This is TEXT-ONLY — no diagrams, no animation
 - DO NOT include "why it's needed" here — that's Segment 4
-- Duration: 10-15 seconds
+- Keep this BRIEF — max 2-3 bullet points, max 2 voiceover blocks
+- Duration: 8-12 seconds (keep SHORT — the visual segment is the star)
 - End with FULL SCREEN CLEANUP
 
 SEGMENT: working (comment: # ═══ SEGMENT 3: HOW IT WORKS ═══)
+- ⭐ THIS IS THE MOST IMPORTANT SEGMENT — it should be 60%+ of the total video duration
 - The main visual demonstration — the HEART of the video
 - Follow the plan's inner steps, voiceovers, and key_texts
 - Use the plan's visual_type, manim_objects, layout, color_scheme, key_formulas
+- MUST have AT LEAST 4-6 sub-steps with distinct visual changes
+- Each sub-step must show MOVEMENT, TRANSFORMATION, or VISUAL CHANGE — not just text appearing
+- ❌ NEVER just show text/bullets in this segment — that belongs in Segment 2
+- ✅ Use arrows, shapes, color transitions, element movement, transforms, graphs, grids, etc.
+- ✅ Show the PROCESS step-by-step with animated elements (e.g., pointers scanning, elements swapping, data flowing)
+- ✅ Each sub-step should have its own voiceover block narrating what the viewer SEES happening
 - Each sub-step must clean up previous elements (FadeOut specific groups)
 - Use split-screen: main visual LEFT 60%, key text RIGHT 40%
 - Include the AHA MOMENT with special visual treatment (glow, scale, GOLD color)
 - Make this as RICH and DETAILED as possible — use real data, formulas, concrete examples
-- Duration: 20-30 seconds
+- Duration: 40-60 seconds (THIS segment should be the LONGEST by far)
 - End with FULL SCREEN CLEANUP
 
-SEGMENT: need_usecase (comment: # ═══ SEGMENT 4: NEED / USE CASE ═══)
-- Show the "need" sentence as a heading
-- Show use cases as BULLETED LIST with "•" prefix
-- Voiceover READS the need statement, THEN reads each use case aloud
-- ⚠️ Everything on screen MUST be spoken — no silent text
-- DO NOT re-define the topic (that was Segment 2)
-- Duration: 8-12 seconds
-- End with FULL SCREEN CLEANUP
-
-SEGMENT: summary (comment: # ═══ SEGMENT 5: SUMMARY ═══)
+SEGMENT: summary (comment: # ═══ SEGMENT 4: SUMMARY ═══)
 - Show a summary banner (RoundedRectangle) with the key takeaway
 - Use green color (#6AB04C) for the banner
+- Include 2 text lines: line 1 = key takeaway, line 2 = one brief real-world application (e.g., "Used in: text editors, DNA search, network security")
+- ❌ Do NOT create a separate "Need/Use Case" or "Why It Matters" segment — just mention applications in this one banner
 - End with self.wait(2.0) for screen retention
 
 ── FREE-FORM SEGMENTS (any segment types the planner decides) ──
@@ -473,12 +471,9 @@ SEGMENT-SPECIFIC ANIMATION GUIDELINES:
 - Segment 2 (Theory): Use `SurroundingRectangle` to highlight definition, then `.animate.set_color()` to color each bullet as voice reads it. NOT Indicate()-spam.
 - Segment 3 (Core Animation): The RICHEST segment — use `.animate.move_to()`, arrows, color transitions,
   `GrowFromCenter()`, `Create(arrow)`. This is the visual heart; it should feel ALIVE with movement.
-- Segment 4 (Need/Use Case): Visually DIFFERENT from Segment 2. Use numbered icon circles + text, or
-  progressive reveal with `DrawBorderThenFill()`, NOT the same bullet pattern as Segment 2.
-  ❌ NEVER do a mass color-flash on all icons at once (e.g., all 3 icons→YELLOW simultaneously).
-  ✅ Each icon should flash/grow individually AS the voice mentions it.
-- Segment 5 (Summary): Use `FadeIn(scale=1.08)` for the banner, then `Circumscribe()` for text.
-  ✅ ALWAYS include 2 text lines in the summary banner (sum_l1 + sum_l2) — single-line banners look thin.
+  ⭐ This segment should be 60%+ of total video. AT LEAST 4-6 sub-steps with distinct visual changes.
+- Segment 4 (Summary): Use `FadeIn(scale=1.08)` for the banner, then `Circumscribe()` for text.
+  ✅ ALWAYS include 2 text lines in the summary banner (sum_l1 + sum_l2) — line 1 = key takeaway, line 2 = brief application.
 
 ALGORITHM-SPECIFIC VISUAL PATTERNS:
 - SORTING — CRITICAL RULES (Quick Sort, Merge Sort, Bubble Sort, etc.):
@@ -795,10 +790,7 @@ class GeneratedScene(VoiceoverScene):
             try:
                 self.set_speech_service(AzureService(**azure_kwargs))
             except Exception:
-                if fallback_provider == "gtts":
-                    self.set_speech_service(GTTSService(lang="en"))
-                else:
-                    raise
+                self.set_speech_service(GTTSService(lang="en"))
         else:
             self.set_speech_service(GTTSService(lang="en"))
         self.camera.background_color = "#0F0F1A"
@@ -1024,7 +1016,7 @@ ANIMATION PLAN (use this as the source of truth):
 
 PLAN USAGE RULES:
 - The plan has `segments` array. Generate code for ALL segments in order.
-- The plan may have 5 segments (topic_name, theory, working, need_usecase, summary) — the STRUCTURED arc.
+- The plan may have 4 segments (topic_name, theory, working, summary) — the STRUCTURED arc.
   OR 3-7 segments with any type names — the FREE-FORM arc.
 - To detect which: if segment types include "topic_name" or "theory" → structured; otherwise → free-form.
 - For STRUCTURED plans, use the golden template above as your guide.
@@ -1673,6 +1665,21 @@ def _validate_generated_code(
     if loop_warning:
         _record_warning(f"LOOP TIMING: {loop_warning}")
 
+    # Check that Segment 3 (working/core animation) is the dominant segment
+    seg3_match = re.search(
+        r'#\s*═+\s*SEGMENT\s*3.*?(?=#\s*═+\s*SEGMENT\s*4|$)',
+        code, re.DOTALL | re.IGNORECASE
+    )
+    if seg3_match:
+        seg3_code = seg3_match.group(0)
+        seg3_voiceovers = len(re.findall(r'with\s+self\.voiceover\s*\(', seg3_code))
+        if seg3_voiceovers < 4:
+            _record_warning(
+                f"SEGMENT 3 TOO SHORT: Only {seg3_voiceovers} voiceover blocks in the working segment. "
+                "This is the VISUAL HEART of the video — it needs AT LEAST 4 sub-steps with "
+                "distinct visual animations (movement, transforms, color changes), not just text."
+            )
+
     try:
         compile(code, "scene.py", "exec")
     except SyntaxError as e:
@@ -1747,6 +1754,20 @@ def _apply_preventive_fixes(code: str) -> str:
     # but as a safety net we also do a plain string replace so no edge-case can slip through.
 
     fixed = fixed.replace('SurroundingRoundedRectangle', 'SurroundingRectangle')
+
+    # ── CRITICAL: Fix bare 'raise' in TTS fallback ──
+    # Old boilerplate had: except Exception: if fallback_provider == "gtts": ... else: raise
+    # The bare 'raise' crashes with "No active exception to reraise" in Docker.
+    fixed = re.sub(
+        r'(\s+)except\s+Exception\s*:\s*\n'
+        r'\s+if\s+fallback_provider\s*==\s*"gtts"\s*:\s*\n'
+        r'\s+self\.set_speech_service\(GTTSService\(lang="en"\)\)\s*\n'
+        r'\s+else\s*:\s*\n'
+        r'\s+raise\s*\n',
+        r'\1except Exception:\n'
+        r'\1    self.set_speech_service(GTTSService(lang="en"))\n',
+        fixed
+    )
 
     # ── CRITICAL: Strip hallucinated Text() parameters ──
     # Text() in Manim v0.20.1 does NOT accept alignment, max_width, or justify.

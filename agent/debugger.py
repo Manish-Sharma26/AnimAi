@@ -126,6 +126,23 @@ def _apply_common_manim_runtime_fixes(code: str, error: str) -> str:
     fixed = code
     err = (error or "").lower()
 
+    # CRITICAL: Fix bare 'raise' in TTS fallback that causes
+    # "No active exception to reraise" in Docker.
+    # Replace the if/else fallback_provider pattern with simple gTTS fallback.
+    if "no active exception to reraise" in err or (
+        "raise" in fixed and "fallback_provider" in fixed
+    ):
+        fixed = re.sub(
+            r'(\s+)except\s+Exception\s*:\s*\n'
+            r'\s+if\s+fallback_provider\s*==\s*"gtts"\s*:\s*\n'
+            r'\s+self\.set_speech_service\(GTTSService\(lang="en"\)\)\s*\n'
+            r'\s+else\s*:\s*\n'
+            r'\s+raise\s*\n',
+            r'\1except Exception:\n'
+            r'\1    self.set_speech_service(GTTSService(lang="en"))\n',
+            fixed
+        )
+
     # Common LLM mistake: `obj.center` used as a point instead of `obj.get_center()`.
     if "unsupported operand type(s) for -: 'method' and 'float'" in err or "has no attribute 'center'" in err:
         fixed = re.sub(r'\.center\b(?!\()', '.get_center()', fixed)

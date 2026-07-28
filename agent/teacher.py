@@ -13,7 +13,7 @@ TEACHER_MODEL = os.getenv("TEACHER_MODEL", "gemini-2.5-flash")
 
 STRUCTURED_TEACHER_PROMPT = """You are a world-class educator. A student wants to learn about: {query}
 
-Your task is to design a 5-beat pedagogical arc for an educational animation.
+Your task is to design a 4-beat pedagogical arc for an educational animation.
 Each beat is a distinct teaching moment. There must be ZERO content overlap between beats.
 
 ━━━━━━━━━━ BEAT 1 — TOPIC NAME (the title slide) ━━━━━━━━━━
@@ -46,38 +46,27 @@ Rules:
   "neural_network_diagram", "matrix_grid", "timeline", "comparison_chart"
   Be specific about WHY this visual type is best for this topic.
 - visual_description: Describe concretely what the animation/diagram should look like.
-- steps: 3-5 concrete steps describing the mechanism with specific values/examples.
+- steps: 4-6 concrete steps describing the mechanism with specific values/examples.
   Each step should describe a VISIBLE change in the animation.
+  ⭐ THIS IS THE MOST IMPORTANT PART — more steps = richer animation.
 - step_voiceovers: One narration line per step (12-22 words each).
-- aha_step_index: Which step is the "aha moment" (usually step 2 or 3, 0-indexed).
+- aha_step_index: Which step is the "aha moment" (usually step 3 or 4, 0-indexed).
 - This is about PROCESS and FLOW — the visual demonstration of how it works.
 - Use CONCRETE numbers, values, and examples — never be abstract.
 - DO NOT repeat the definition or theory points from Beat 2.
-- DO NOT mention use cases — that's Beat 4.
+- This beat should take 60%+ of total video duration.
 
-━━━━━━━━━━ BEAT 4 — NEED / USE CASE (why does this exist?) ━━━━━━━━━━
-Goal: Explain WHY this topic is needed and WHERE it is used in the real world.
-Rules:
-- need: ONE clear sentence explaining the problem this topic solves or why it was created.
-- use_cases: 2-4 concrete, real-world use cases or applications.
-  Each must be a SPECIFIC example (e.g., "Google Translate uses this for language translation")
-  not a vague category (e.g., "used in industry").
-- on_screen_text: Need statement + use cases shown on screen as text.
-- voiceover: MUST READ ALOUD everything shown on screen. The need, then each use case.
-  ⚠️ CRITICAL: Whatever text appears on screen MUST be spoken. No silent text.
-- DO NOT re-define the topic (that was Beat 2).
-- DO NOT explain how it works (that was Beat 3).
-- This is purely about WHY it matters and WHERE it's applied.
-
-━━━━━━━━━━ BEAT 5 — SUMMARY (the takeaway) ━━━━━━━━━━
-Goal: Leave the student with ONE memorable, punchy statement.
+━━━━━━━━━━ BEAT 4 — SUMMARY (the takeaway) ━━━━━━━━━━
+Goal: Leave the student with ONE memorable, punchy statement + brief application.
 Rules:
 - takeaway: 5-15 words. Memorable. Punchy.
-- NOT a repetition of the definition (Beat 2) or the need (Beat 4).
+- application: One brief real-world application or use (e.g., "Used in: text editors, DNA search, signal processing").
+- NOT a repetition of the definition (Beat 2).
 - Should capture the ESSENCE of what they just learned.
-- on_screen_text: The takeaway text shown in a green banner.
+- on_screen_text: The takeaway text + brief application shown in a green banner.
 - voiceover: Read the takeaway with conviction.
   ⚠️ CRITICAL: The voiceover text must MATCH the on-screen takeaway text.
+- ❌ Do NOT create a separate "Need/Use Case" or "Why It Matters" beat.
 
 Return ONLY a JSON object in this exact format:
 {{
@@ -99,11 +88,10 @@ Return ONLY a JSON object in this exact format:
              "theory_points": [
                  "Core principle 1 — concrete and specific",
                  "Core principle 2 — concrete and specific",
-                 "Core principle 3 — what makes this special",
-                 "Key detail 4 (optional)"
+                 "Core principle 3 — what makes this special"
              ],
-             "on_screen_text": "Definition + each theory point shown as text (≤60 words total)",
-             "voiceover": "Read the definition aloud, then read each theory point aloud (40-70 words)"
+             "on_screen_text": "Definition + each theory point shown as text (≤50 words total)",
+             "voiceover": "Read the definition aloud, then read each theory point aloud (30-50 words)"
         }},
         {{
             "beat": 3,
@@ -113,48 +101,38 @@ Return ONLY a JSON object in this exact format:
             "steps": [
                 "Step 1: concrete description with specific values or examples",
                 "Step 2: concrete description with visible animation change",
-                "Step 3: the AHA moment — concrete description"
+                "Step 3: concrete description with visible animation change",
+                "Step 4: the AHA moment — concrete description"
             ],
             "step_voiceovers": [
                 "Step 1 narration (12-22 words)",
                 "Step 2 narration (12-22 words)",
-                "Step 3 AHA narration (12-22 words)"
+                "Step 3 narration (12-22 words)",
+                "Step 4 AHA narration (12-22 words)"
             ],
-            "aha_step_index": 2,
+            "aha_step_index": 3,
             "voiceover": "Overall narration for this segment (used if step_voiceovers is unavailable)"
         }},
         {{
             "beat": 4,
-            "label": "Need / Use Case",
-            "need": "Why this topic exists — what problem it solves (1 sentence)",
-            "use_cases": [
-                "Concrete use case 1 with specific example",
-                "Concrete use case 2 with specific example",
-                "Concrete use case 3 with specific example"
-            ],
-            "on_screen_text": "Need statement + use cases shown on screen (≤50 words)",
-            "voiceover": "Read aloud: why it's needed, then each use case (30-50 words)"
-        }},
-        {{
-            "beat": 5,
             "label": "Summary",
-            "takeaway": "5-15 word memorable statement (NOT a repeat of the definition or need)",
-            "on_screen_text": "Exact text for the summary banner (≤15 words)",
+            "takeaway": "5-15 word memorable statement (NOT a repeat of the definition)",
+            "application": "Brief real-world application (e.g., Used in: text editors, DNA search)",
+            "on_screen_text": "Exact text for the summary banner (≤20 words)",
             "voiceover": "Read the takeaway with conviction (10-20 words)"
         }}
     ]
 }}
 
 QUALITY CHECKLIST (self-verify before returning):
-- Beat 1 is ONLY the topic name — no definition, no theory, no use case.
-- Beat 2 (theory) has NO use cases and NO step-by-step mechanism — those are Beats 4 and 3.
+- Beat 1 is ONLY the topic name — no definition, no theory.
+- Beat 2 (theory) has NO mechanism steps — those are in Beat 3.
 - Beat 2 voiceover READS ALOUD all on-screen text. No silent text allowed.
-- Beat 3 (working) has NO re-definition and NO use cases — purely visual mechanism.
+- Beat 3 (working) has NO re-definition — purely visual mechanism. HAS 4-6 STEPS.
 - Beat 3 suggested_visual is specific and justified for this topic.
-- Beat 4 (need/use case) does NOT re-define the topic — only says WHY it matters and WHERE it's used.
-- Beat 4 voiceover READS ALOUD all on-screen text. No silent text allowed.
-- Beat 5 takeaway is NOT the same sentence as Beat 2 definition or Beat 4 need.
-- Beat 5 voiceover MATCHES the on-screen takeaway text.
+- Beat 3 is the LONGEST beat — 60%+ of total video duration.
+- Beat 4 takeaway is NOT the same sentence as Beat 2 definition.
+- Beat 4 voiceover MATCHES the on-screen takeaway text.
 - recommended_duration: 45-55 for beginner, 55-70 for intermediate, 65-85 for advanced.
 
 Return ONLY the JSON. No explanation before or after."""
@@ -334,7 +312,7 @@ _DURATION_BY_DIFFICULTY = {
     "advanced": 75,
 }
 
-# ── Duration mapping for structured 5-beat arc ──────────────────────
+# ── Duration mapping for structured 4-beat arc ──────────────────────
 _STRUCTURED_DURATION_BY_DIFFICULTY = {
     "beginner": 50,
     "intermediate": 65,
@@ -382,7 +360,7 @@ def _normalize_explanation(explanation: dict, query: str) -> dict:
 
 
 def _normalize_structured_beats(beats_data: dict, query: str) -> dict:
-    """Ensure the structured 5-beat teacher output is safe and complete."""
+    """Ensure the structured 4-beat teacher output is safe and complete."""
     safe = dict(beats_data or {})
     safe["topic"] = safe.get("topic") or query[:60]
     safe["difficulty_level"] = safe.get("difficulty_level") or "intermediate"
@@ -396,20 +374,21 @@ def _normalize_structured_beats(beats_data: dict, query: str) -> dict:
         safe["recommended_duration"] = _STRUCTURED_DURATION_BY_DIFFICULTY.get(level, 65)
 
     beats = safe.get("beats", [])
-    if len(beats) < 5:
+    # Filter out any "Need / Use Case" beats that old models might still return
+    beats = [b for b in beats if b.get("label", "").lower() not in ("need / use case", "need/use case")]
+    if len(beats) < 4:
         # Pad with safe defaults if LLM returned fewer beats
         default_labels = [
-            "Topic Name", "What It Is", "How It Works",
-            "Need / Use Case", "Summary"
+            "Topic Name", "What It Is", "How It Works", "Summary"
         ]
-        while len(beats) < 5:
+        while len(beats) < 4:
             idx = len(beats)
             beats.append({
                 "beat": idx + 1,
-                "label": default_labels[idx],
+                "label": default_labels[idx] if idx < len(default_labels) else "Summary",
                 "voiceover": f"Learn about {query}.",
             })
-    safe["beats"] = beats[:5]
+    safe["beats"] = beats[:4]
 
     return safe
 
@@ -423,13 +402,13 @@ def teach_concept(query: str, intent: str = "detailed") -> dict:
     ----------
     query  : The user's input (topic name or detailed instruction).
     intent : ``"bare_topic"`` or ``"simple_explanation"`` selects the
-             strict 7-beat arc.
+             strict 4-beat arc.
              ``"detailed"`` (default) uses the original comprehensive prompt.
     """
     print(f"[Teacher] Explaining concept: {query} (intent={intent})")
 
     if intent in ("bare_topic", "simple_explanation"):
-        # ── Structured path: strict 5-beat arc, zero overlap between beats ──
+        # ── Structured path: strict 4-beat arc, zero overlap between beats ──
         response = call_llm(
             STRUCTURED_TEACHER_PROMPT.format(query=query),
             max_tokens=4096,
@@ -440,7 +419,7 @@ def teach_concept(query: str, intent: str = "detailed") -> dict:
         try:
             beats_data = json.loads(response.strip())
             beats_data = _normalize_structured_beats(beats_data, query)
-            print(f"[Teacher] Structured 5-beat arc: {len(beats_data.get('beats', []))} beats")
+            print(f"[Teacher] Structured 4-beat arc: {len(beats_data.get('beats', []))} beats")
             print(f"[Teacher] Difficulty: {beats_data.get('difficulty_level')} → {beats_data.get('recommended_duration')}s")
             print(f"[Teacher] Visual metaphor: {beats_data.get('visual_metaphor', '')[:60]}")
             # Tag the response so planner knows which arc was used
