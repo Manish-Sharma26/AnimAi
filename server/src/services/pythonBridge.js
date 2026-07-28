@@ -35,8 +35,8 @@ async function createPlan(prompt) {
   return data;
 }
 
-async function generateVideo(prompt, plan) {
-  const { data } = await pythonAPI.post("/generate", { prompt, plan }, { timeout: 300000 });
+async function generateVideo(prompt, plan, animationId) {
+  const { data } = await pythonAPI.post("/generate", { prompt, plan, animation_id: animationId }, { timeout: 300000 });
   return data;
 }
 

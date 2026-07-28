@@ -45,9 +45,7 @@ export default function Navbar() {
         </>
       ) : (
         <div className="navbar__links">
-          <Link to="/auth" className="btn btn--primary btn--sm">
-            Sign In
-          </Link>
+          <Link to="/explore" className={isActive("/explore")}>Explore</Link>
         </div>
       )}
     </nav>

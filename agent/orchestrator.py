@@ -140,7 +140,7 @@ def build_plan(user_query: str) -> dict:
     return plan
 
 
-def run_agent_with_plan(user_query: str, approved_plan: dict) -> dict:
+def run_agent_with_plan(user_query: str, approved_plan: dict, video_id: str = "") -> dict:
     """
     Pipeline execution using a pre-approved plan.
     """
@@ -175,7 +175,7 @@ def run_agent_with_plan(user_query: str, approved_plan: dict) -> dict:
         code = code.replace('SurroundingRoundedRectangle', 'SurroundingRectangle')
         code = code.replace('.to_center()', '.move_to(ORIGIN)')
 
-        result = run_manim_sandbox(code, query=user_query)
+        result = run_manim_sandbox(code, query=user_query, video_id=video_id)
 
         if result["success"]:
             print(f"[Agent] Compiled on attempt {attempt}!")

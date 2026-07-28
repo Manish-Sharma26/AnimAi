@@ -15,6 +15,11 @@ except ImportError:
 DOCKER_IMAGE = "manim-voiceover"
 MIN_VIDEO_BYTES = 200_000
 
+# Resolve project root (parent of sandbox/) so output paths are always absolute
+_SANDBOX_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(_SANDBOX_DIR)
+OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "outputs")
+
 
 def _tail(text: str, max_chars: int = 20000) -> str:
     text = text or ""
@@ -110,7 +115,7 @@ def _find_best_video(output_root: str):
 
     return None, "No video file was generated"
 
-def run_manim_sandbox(code: str, timeout: int = 300, query: str = "") -> dict:
+def run_manim_sandbox(code: str, timeout: int = 300, query: str = "", video_id: str = "") -> dict:
     """
     Takes Manim Python code as a string.
     Runs it inside Docker using pre-built Manim image.
@@ -121,15 +126,15 @@ def run_manim_sandbox(code: str, timeout: int = 300, query: str = "") -> dict:
     try:
         compile(code, "scene.py", "exec")
     except SyntaxError as e:
-        os.makedirs("outputs", exist_ok=True)
-        with open(os.path.join("outputs", "last_failed_scene.py"), "w", encoding="utf-8") as f:
+        os.makedirs(OUTPUTS_DIR, exist_ok=True)
+        with open(os.path.join(OUTPUTS_DIR, "last_failed_scene.py"), "w", encoding="utf-8") as f:
             f.write(code)
 
         syntax_error = (
             f"SyntaxError: {e.msg} at line {e.lineno}, offset {e.offset}\n"
             f"Line: {e.text or ''}"
         )
-        with open(os.path.join("outputs", "last_failed_log.txt"), "w", encoding="utf-8") as f:
+        with open(os.path.join(OUTPUTS_DIR, "last_failed_log.txt"), "w", encoding="utf-8") as f:
             f.write(syntax_error)
 
         # Persist to timestamped failure log
@@ -204,11 +209,12 @@ def run_manim_sandbox(code: str, timeout: int = 300, query: str = "") -> dict:
             video_path, video_error = _find_best_video(os.path.join(tmp_dir, "output"))
 
             if video_path:
-                os.makedirs("outputs", exist_ok=True)
-                final_path = os.path.join("outputs", "animation.mp4")
+                os.makedirs(OUTPUTS_DIR, exist_ok=True)
+                filename = f"animation_{video_id}.mp4" if video_id else "animation.mp4"
+                final_path = os.path.join(OUTPUTS_DIR, filename)
                 shutil.copy(video_path, final_path)
 
-                with open(os.path.join("outputs", "last_success_scene.py"), "w", encoding="utf-8") as f:
+                with open(os.path.join(OUTPUTS_DIR, "last_success_scene.py"), "w", encoding="utf-8") as f:
                     f.write(code)
 
                 print(f"[Sandbox] ✅ Success! Video saved to: {final_path}")
@@ -241,10 +247,10 @@ def run_manim_sandbox(code: str, timeout: int = 300, query: str = "") -> dict:
             )
 
             # Keep last failed artifacts for easier local debugging.
-            os.makedirs("outputs", exist_ok=True)
-            with open(os.path.join("outputs", "last_failed_scene.py"), "w", encoding="utf-8") as f:
+            os.makedirs(OUTPUTS_DIR, exist_ok=True)
+            with open(os.path.join(OUTPUTS_DIR, "last_failed_scene.py"), "w", encoding="utf-8") as f:
                 f.write(code)
-            with open(os.path.join("outputs", "last_failed_log.txt"), "w", encoding="utf-8") as f:
+            with open(os.path.join(OUTPUTS_DIR, "last_failed_log.txt"), "w", encoding="utf-8") as f:
                 f.write(combined_error)
 
             # Detect failure type for better log tagging

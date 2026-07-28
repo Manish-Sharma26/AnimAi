@@ -57,6 +57,7 @@ class PlanRequest(BaseModel):
 class GenerateRequest(BaseModel):
     prompt: str
     plan: dict
+    animation_id: Optional[str] = ""
 
 class ReviseRequest(BaseModel):
     prompt: str
@@ -87,7 +88,7 @@ def create_plan(req: PlanRequest):
 def generate_video(req: GenerateRequest):
     """Run the full AI pipeline: plan → code → render → video."""
     try:
-        result = run_agent_with_plan(req.prompt, req.plan)
+        result = run_agent_with_plan(req.prompt, req.plan, video_id=req.animation_id or "")
         return result
     except Exception as e:
         traceback.print_exc()

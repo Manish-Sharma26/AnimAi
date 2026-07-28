@@ -93,7 +93,7 @@ const worker = new Worker(
 
       let result;
       try {
-        result = await generateVideo(prompt, plan || {});
+        result = await generateVideo(prompt, plan || {}, animationId);
       } finally {
         clearInterval(ticker);
       }
